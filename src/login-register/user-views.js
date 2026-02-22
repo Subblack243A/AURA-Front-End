@@ -90,15 +90,15 @@ const UserViews = {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="FK_Faculty">Facultad</label>
-                        <select id="FK_Faculty" required>
-                            <option value="1">Ingeniería</option>
+                        <label for="FK_Program">Programa</label>
+                        <select id="FK_Program" required disabled>
+                            <option value="">Cargando programas...</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="FK_Program">Programa</label>
-                        <select id="FK_Program" required>
-                            <option value="1">Ingeniería de Sistemas</option>
+                        <label for="FK_Faculty">Facultad</label>
+                        <select id="FK_Faculty" required disabled>
+                            <option value="">Seleccione un programa primero</option>
                         </select>
                     </div>
 
@@ -125,6 +125,47 @@ const UserViews = {
         `;
 
         const form = document.getElementById('register-form');
+        const programSelect = document.getElementById('FK_Program');
+        const facultySelect = document.getElementById('FK_Faculty');
+
+        // Fetch programs and faculties
+        const loadPrograms = async () => {
+            try {
+                const response = await fetch(`${window.API_URL || '/api'}/programs/`);
+                if (!response.ok) throw new Error('Error al cargar programas');
+                const programs = await response.json();
+
+                programSelect.innerHTML = '<option value="">Seleccione un programa</option>';
+                programs.forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.ID_Program;
+                    option.textContent = p.Program;
+                    // Store faculty info within the option dataset for easy access
+                    if (p.faculty) {
+                        option.dataset.facultyId = p.faculty.ID_Faculty;
+                        option.dataset.facultyName = p.faculty.Faculty;
+                    }
+                    programSelect.appendChild(option);
+                });
+                programSelect.disabled = false;
+            } catch (err) {
+                console.error(err);
+                programSelect.innerHTML = '<option value="">Error al cargar</option>';
+            }
+        };
+
+        // Auto-fill faculty on program change
+        programSelect.addEventListener('change', (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            if (selectedOption.value && selectedOption.dataset.facultyId) {
+                facultySelect.innerHTML = `<option value="${selectedOption.dataset.facultyId}" selected>${selectedOption.dataset.facultyName}</option>`;
+            } else {
+                facultySelect.innerHTML = '<option value="">Seleccione un programa primero</option>';
+            }
+        });
+
+        loadPrograms();
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);
