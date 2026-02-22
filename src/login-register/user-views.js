@@ -1,4 +1,32 @@
 const UserViews = {
+    renderCameraPermission(app) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Acceso a Cámara</h1>
+                <p class="subtitle">Para iniciar sesión, necesitamos usar tu cámara para el análisis de emociones y seguridad.</p>
+                <div class="camera-icon-preview" style="text-align: center; margin: 2rem 0;">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                </div>
+                <button id="enable-camera-btn">Habilitar Cámara</button>
+                <button class="link-btn" id="go-to-login-anyway">Continuar al Login</button>
+            </div>
+        `;
+
+        document.getElementById('enable-camera-btn').addEventListener('click', async () => {
+            const allowed = await window.CameraHandler.requestPermission();
+            if (allowed) {
+                app.renderLogin();
+            } else {
+                alert('No se pudo acceder a la cámara. Por favor, asegúrate de dar los permisos necesarios.');
+            }
+        });
+
+        document.getElementById('go-to-login-anyway').addEventListener('click', () => app.renderLogin());
+    },
+
     renderLogin(app) {
         app.appContainer.innerHTML = `
             <div class="card">
@@ -14,37 +42,13 @@ const UserViews = {
                         <label for="password">Contraseña</label>
                         <input type="password" id="password" required placeholder="••••••••">
                     </div>
-                    <!-- Hidden camera for background capture -->
-                    <div id="camera-container" style="display: none;">
-                        <video id="camera-video" autoplay playsinline muted></video>
-                    </div>
-                    <button type="submit" data-original-text="Iniciar Sesión">Iniciar Sesión</button>
+                    <button type="submit" data-original-text="Siguiente">Siguiente</button>
                 </form>
                 <button class="link-btn" id="go-to-register">¿No tienes cuenta? Regístrate</button>
-            </div>
-
-            <!-- Face Registration Modal -->
-            <div id="face-modal" class="modal" style="display: none;">
-                <div class="modal-content card">
-                    <h2>Registro Facial Requerido</h2>
-                    <p>Necesitamos una foto tuya para completar el registro y analizar tus emociones.</p>
-                    <div class="camera-preview">
-                        <video id="modal-video" autoplay playsinline muted></video>
-                        <div class="camera-overlay"></div>
-                    </div>
-                    <div class="modal-actions">
-                        <button id="capture-btn" class="primary-btn">Tomar Foto y Continuar</button>
-                    </div>
-                </div>
             </div>
         `;
 
         const form = document.getElementById('login-form');
-        const faceModal = document.getElementById('face-modal');
-        const captureBtn = document.getElementById('capture-btn');
-
-        // Request camera permission on load
-        window.CameraHandler.init('#camera-video');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -54,49 +58,70 @@ const UserViews = {
             const password = document.getElementById('password').value;
 
             try {
-                // 1. Attempt capture in background
-                let imageFile = await window.CameraHandler.capturePhoto();
+                // Try login without image first to check credentials
+                await window.Auth.login(email, password, null);
 
-                // 2. Try login
-                await window.Auth.login(email, password, imageFile);
-
+                // If by some chance it succeeds (e.g. backend doesn't require image for this user), go to dashboard
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
-                if (err.message.includes('Face registration required') || err.message.includes('Image file is required')) {
-                    // Show modal for foreground capture
-                    faceModal.style.display = 'flex';
-                    // Re-init camera for modal
-                    await window.CameraHandler.init('#modal-video');
-
-                    // Wait for photo capture
-                    const newPhoto = await new Promise(resolve => {
-                        captureBtn.onclick = async () => {
-                            const photo = await window.CameraHandler.capturePhoto();
-                            resolve(photo);
-                        };
-                    });
-
-                    faceModal.style.display = 'none';
-                    app.setLoading(true); // Keep loading state
-
-                    try {
-                        await window.Auth.login(email, password, newPhoto);
-                        if (window.Navbar) window.Navbar.update();
-                        app.renderDashboard();
-                    } catch (retryErr) {
-                        app.showError(retryErr.message);
-                    }
+                // If credentials are correct, backend returns 400 "Image file is required"
+                if (err.message.includes('Image file is required') || err.message.includes('Face registration required')) {
+                    app.renderFaceVerification(email, password);
                 } else {
                     app.showError(err.message);
                 }
             } finally {
                 app.setLoading(false);
-                window.CameraHandler.stop();
             }
         });
 
         document.getElementById('go-to-register').addEventListener('click', () => app.renderRegister());
+    },
+
+    renderFaceVerification(app, email, password) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Verificación Facial</h1>
+                <p class="subtitle">Mira a la cámara para finalizar el inicio de sesión.</p>
+                <div class="error-message"></div>
+                <div class="camera-preview">
+                    <video id="verification-video" autoplay playsinline muted></video>
+                    <div class="camera-overlay"></div>
+                </div>
+                <button id="verify-btn" data-original-text="Verificar e Iniciar Sesión">Verificar e Iniciar Sesión</button>
+                <button class="link-btn" id="back-to-login">Volver</button>
+            </div>
+        `;
+
+        const videoSelector = '#verification-video';
+        const verifyBtn = document.getElementById('verify-btn');
+
+        // Init camera for preview
+        window.CameraHandler.init(videoSelector);
+
+        verifyBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                const imageFile = await window.CameraHandler.capturePhoto();
+                if (!imageFile) throw new Error('No se pudo capturar la foto');
+
+                await window.Auth.login(email, password, imageFile);
+
+                window.CameraHandler.stop();
+                if (window.Navbar) window.Navbar.update();
+                app.renderDashboard();
+            } catch (err) {
+                app.showError(err.message);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('back-to-login').addEventListener('click', () => {
+            window.CameraHandler.stop();
+            app.renderLogin();
+        });
     },
 
     renderRegister(app) {

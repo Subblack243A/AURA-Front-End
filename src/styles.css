@@ -57,6 +57,27 @@ body {
     }
 }
 
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.camera-icon-preview svg {
+    animation: pulse 2s infinite ease-in-out;
+}
+
 h1 {
     font-size: 2rem;
     margin-bottom: 0.5rem;
@@ -69,6 +90,21 @@ p.subtitle {
     text-align: center;
     margin-bottom: 2rem;
     font-size: 0.875rem;
+}
+
+.error-message {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--error);
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    display: none;
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
 }
 
 
@@ -111,6 +147,24 @@ button {
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: 1.5rem;
+    width: 100%;
+    cursor: pointer;
+}
+
+.link-btn:hover {
+    color: var(--primary);
+    text-decoration: underline;
+    background: none;
+    transform: none;
 }
 
 /* Modal Styles */

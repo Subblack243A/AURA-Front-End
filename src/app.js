@@ -12,7 +12,8 @@ const App = {
         if (window.Auth.isAuthenticated()) {
             this.renderDashboard();
         } else {
-            this.renderLogin();
+            // Start with camera permission request
+            this.renderCameraPermission();
         }
     },
 
@@ -32,9 +33,21 @@ const App = {
         }
     },
 
+    renderCameraPermission() {
+        if (window.UserViews) {
+            window.UserViews.renderCameraPermission(this);
+        }
+    },
+
     renderLogin() {
         if (window.UserViews) {
             window.UserViews.renderLogin(this);
+        }
+    },
+
+    renderFaceVerification(email, password) {
+        if (window.UserViews) {
+            window.UserViews.renderFaceVerification(this, email, password);
         }
     },
 
