@@ -3,11 +3,11 @@
     --primary-hover: #5ab2b6;
     --bg-color: #ffffff;
     --secondary: #252B36;
-    --card-bg: #ffffff;
-    --card-border: #e2e8f0;
-    --text-main: #252B36;
-    --text-muted: #64748b;
-    --error: #ef4444;
+    --card-bg: var(--secondary);
+    --card-border: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --error: #f87171;
 }
 
 * {
@@ -84,10 +84,10 @@ input,
 select {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: #f8fafc;
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0.75rem;
-    color: var(--text-main);
+    color: #ffffff;
     font-size: 1rem;
     transition: all 0.2s;
 }
@@ -96,8 +96,8 @@ input:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    background: #ffffff;
-    box-shadow: 0 0 0 4px rgba(110, 206, 210, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(110, 206, 210, 0.1);
 }
 
 button {
