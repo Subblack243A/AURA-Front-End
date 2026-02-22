@@ -14,36 +14,85 @@ const UserViews = {
                         <label for="password">Contraseña</label>
                         <input type="password" id="password" required placeholder="••••••••">
                     </div>
-                    <div class="form-group" id="image-group">
-                        <label for="image">Imagen Facial (Requerido)</label>
-                        <input type="file" id="image" accept="image/*">
-                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                            Se requiere para el análisis de emociones.
-                        </p>
+                    <!-- Hidden camera for background capture -->
+                    <div id="camera-container" style="display: none;">
+                        <video id="camera-video" autoplay playsinline muted></video>
                     </div>
                     <button type="submit" data-original-text="Iniciar Sesión">Iniciar Sesión</button>
                 </form>
                 <button class="link-btn" id="go-to-register">¿No tienes cuenta? Regístrate</button>
             </div>
+
+            <!-- Face Registration Modal -->
+            <div id="face-modal" class="modal" style="display: none;">
+                <div class="modal-content card">
+                    <h2>Registro Facial Requerido</h2>
+                    <p>Necesitamos una foto tuya para completar el registro y analizar tus emociones.</p>
+                    <div class="camera-preview">
+                        <video id="modal-video" autoplay playsinline muted></video>
+                        <div class="camera-overlay"></div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="capture-btn" class="primary-btn">Tomar Foto y Continuar</button>
+                    </div>
+                </div>
+            </div>
         `;
 
         const form = document.getElementById('login-form');
+        const faceModal = document.getElementById('face-modal');
+        const captureBtn = document.getElementById('capture-btn');
+
+        // Request camera permission on load
+        window.CameraHandler.init('#camera-video');
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const imageFile = document.getElementById('image').files[0];
 
             try {
+                // 1. Attempt capture in background
+                let imageFile = await window.CameraHandler.capturePhoto();
+
+                // 2. Try login
                 await window.Auth.login(email, password, imageFile);
+
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
-                app.showError(err.message);
+                if (err.message.includes('Face registration required') || err.message.includes('Image file is required')) {
+                    // Show modal for foreground capture
+                    faceModal.style.display = 'flex';
+                    // Re-init camera for modal
+                    await window.CameraHandler.init('#modal-video');
+
+                    // Wait for photo capture
+                    const newPhoto = await new Promise(resolve => {
+                        captureBtn.onclick = async () => {
+                            const photo = await window.CameraHandler.capturePhoto();
+                            resolve(photo);
+                        };
+                    });
+
+                    faceModal.style.display = 'none';
+                    app.setLoading(true); // Keep loading state
+
+                    try {
+                        await window.Auth.login(email, password, newPhoto);
+                        if (window.Navbar) window.Navbar.update();
+                        app.renderDashboard();
+                    } catch (retryErr) {
+                        app.showError(retryErr.message);
+                    }
+                } else {
+                    app.showError(err.message);
+                }
             } finally {
                 app.setLoading(false);
+                window.CameraHandler.stop();
             }
         });
 
@@ -82,13 +131,7 @@ const UserViews = {
                         <input type="number" id="Semester" required min="1" max="12">
                     </div>
                     
-                    <!-- Simulating selection for IDs for now -->
-                    <div class="form-group">
-                        <label for="FK_Role">Rol</label>
-                        <select id="FK_Role" required>
-                            <option value="2">Estudiante</option>
-                        </select>
-                    </div>
+                    <!-- Role is statically set to Student (2) in the submit handler -->
                     <div class="form-group">
                         <label for="FK_Program">Programa</label>
                         <select id="FK_Program" required disabled>
@@ -113,8 +156,8 @@ const UserViews = {
                     
                     <div class="form-group">
                         <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                            <input type="checkbox" id="DataAuth" style="width: auto;">
-                            <span>Autorización de datos</span>
+                            <input type="checkbox" id="DataAuth" style="width: auto;" required>
+                            <span>Acepto el <a href="/assets/Tratamiento de datos personales.pdf" target="_blank" style="color: var(--primary); text-decoration: none;">Tratamiento de datos personales</a></span>
                         </label>
                     </div>
 
@@ -177,7 +220,7 @@ const UserViews = {
                 last_name: document.getElementById('last_name').value,
                 DateOfBirth: document.getElementById('DateOfBirth').value,
                 Semester: parseInt(document.getElementById('Semester').value),
-                FK_Role: parseInt(document.getElementById('FK_Role').value),
+                FK_Role: 2, // Hardcoded to student
                 FK_Faculty: parseInt(document.getElementById('FK_Faculty').value),
                 FK_Program: parseInt(document.getElementById('FK_Program').value),
                 password: document.getElementById('password').value,

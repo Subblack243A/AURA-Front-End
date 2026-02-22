@@ -1,11 +1,12 @@
 :root {
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --card-border: rgba(255, 255, 255, 0.1);
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --primary: #6ECED2;
+    --primary-hover: #5ab2b6;
+    --bg-color: #ffffff;
+    --secondary: #252B36;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --text-main: #252B36;
+    --text-muted: #64748b;
     --error: #ef4444;
 }
 
@@ -17,7 +18,7 @@
 }
 
 body {
-    background: var(--bg-gradient);
+    background: var(--bg-color);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
@@ -25,8 +26,8 @@ body {
     align-items: center;
     justify-content: flex-start;
     overflow-x: hidden;
-    padding-top: 80px;
-    /* Space for fixed navbar */
+    padding-top: 100px;
+    /* Space for larger fixed navbar */
 }
 
 #app {
@@ -37,12 +38,10 @@ body {
 
 .card {
     background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--card-border);
     border-radius: 1.5rem;
     padding: 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px -5px rgba(37, 43, 54, 0.05), 0 8px 10px -6px rgba(37, 43, 54, 0.05);
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -85,7 +84,7 @@ input,
 select {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: #f8fafc;
     border: 1px solid var(--card-border);
     border-radius: 0.75rem;
     color: var(--text-main);
@@ -97,22 +96,80 @@ input:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(110, 206, 210, 0.15);
 }
 
 button {
     width: 100%;
     padding: 0.75rem;
     background: var(--primary);
-    color: white;
+    color: var(--secondary);
     border: none;
     border-radius: 0.75rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    margin-top: 1rem;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    padding: 2rem;
+}
+
+.camera-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #000;
+    border-radius: 1rem;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    border: 3px solid var(--primary);
+}
+
+.camera-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    /* Mirror effect */
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 70%;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
 }
 
 button:hover {
@@ -132,15 +189,16 @@ button:active {
     top: 0;
     left: 0;
     width: 100%;
-    height: 70px;
-    background: rgba(15, 23, 42, 0.8);
+    height: 120px;
+    background: var(--secondary);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--secondary);
     z-index: 1000;
     display: flex;
     align-items: center;
     padding: 0 2rem;
+    box-shadow: 0 4px 6px -1px rgba(37, 43, 54, 0.05);
 }
 
 .nav-container {
@@ -155,17 +213,17 @@ button:active {
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
     text-decoration: none;
-    color: var(--text-main);
-    font-weight: 700;
-    font-size: 1.5rem;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.8rem;
     letter-spacing: -0.025em;
 }
 
 .nav-logo {
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
 }
 
@@ -176,15 +234,15 @@ button:active {
 }
 
 .nav-link {
-    color: var(--text-muted);
+    color: #94a3b8;
     text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 600;
     transition: color 0.2s;
 }
 
 .nav-link:hover {
-    color: var(--text-main);
+    color: #ffffff;
 }
 
 .nav-link.active {
@@ -193,8 +251,9 @@ button:active {
 
 .nav-link.btn-logout {
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
 }
 
