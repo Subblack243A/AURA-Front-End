@@ -23,7 +23,8 @@ const Auth = {
         localStorage.setItem('aura_token', data.token);
         localStorage.setItem('aura_user', JSON.stringify({
             id: data.user_id,
-            username: data.username
+            username: data.username,
+            role: data.role
         }));
 
         return data;
@@ -63,6 +64,11 @@ const Auth = {
     getUser() {
         const user = localStorage.getItem('aura_user');
         return user ? JSON.parse(user) : null;
+    },
+
+    getRole() {
+        const user = this.getUser();
+        return user ? user.role : null;
     }
 };
 
