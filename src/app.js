@@ -32,7 +32,8 @@ const App = {
     showError(message) {
         const errorDiv = this.appContainer.querySelector('.error-message');
         if (errorDiv) {
-            errorDiv.textContent = message;
+            console.error('System Error:', message); // Log the real error for debugging
+            errorDiv.textContent = 'Algo salió mal. Por favor, inténtelo de nuevo.';
             errorDiv.style.display = 'block';
         }
     },
