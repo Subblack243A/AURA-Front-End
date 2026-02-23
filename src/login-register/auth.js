@@ -16,7 +16,9 @@ const Auth = {
 
         const data = await response.json();
         if (!response.ok) {
-            throw new Error(data.error || 'Login failed');
+            const error = new Error(data.error || 'Login failed');
+            error.code = data.code; // Pass through the error code from backend
+            throw error;
         }
 
         // Store session

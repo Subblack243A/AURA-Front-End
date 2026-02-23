@@ -84,11 +84,13 @@ const UserViews = {
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
-                // If credentials are correct, backend returns 400 "Image file is required"
-                if (err.message.includes('Image file is required') || err.message.includes('Face registration required')) {
+                // If credentials are correct but face registration is missing or image is required
+                if (err.code === 'FACE_REGISTRATION_REQUIRED' ||
+                    err.message.includes('Image file is required') ||
+                    err.message.includes('Face registration required')) {
                     app.renderFaceVerification(email, password);
                 } else {
-                    app.showError(err.message);
+                    app.showError(err.message, false); // Pass false as it's likely a validation/cred error
                 }
             } finally {
                 app.setLoading(false);

@@ -33,7 +33,22 @@ const App = {
         const errorDiv = this.appContainer.querySelector('.error-message');
         if (errorDiv) {
             console.error(isSystemError ? 'System Error:' : 'Validation Error:', message);
-            errorDiv.textContent = isSystemError ? 'Algo salió mal. Por favor, inténtelo de nuevo.' : message;
+
+            // If it's a system error, we can show a cleaner message but keep the tech detail visible
+            if (isSystemError) {
+                // For "Face registration required", we want it to be descriptive if it leaks to the UI
+                if (message && message.includes('Face registration required')) {
+                    errorDiv.textContent = 'Se requiere registro facial para este usuario.';
+                } else {
+                    errorDiv.textContent = 'Algo salió mal. Por favor, inténtelo de nuevo.';
+                }
+
+                // Add a small technical detail link/text if specifically requested or for debugging
+                console.debug('Error detail:', message);
+            } else {
+                errorDiv.textContent = message;
+            }
+
             errorDiv.style.display = 'block';
         }
     },
