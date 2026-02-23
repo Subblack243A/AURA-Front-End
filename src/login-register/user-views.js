@@ -172,7 +172,7 @@ const UserViews = {
                     </div>
                     <div class="form-group">
                         <label for="Semester">Semestre</label>
-                        <input type="number" id="Semester" required min="1" max="12">
+                        <input type="number" id="Semester" required min="1" max="10">
                     </div>
                     
                     <!-- Role is statically set to Student (2) in the submit handler -->
@@ -285,18 +285,42 @@ const UserViews = {
             e.preventDefault();
             app.setLoading(true);
 
+            const password = document.getElementById('password').value;
+            const confirm_password = document.getElementById('confirm_password').value;
+            const semester = parseInt(document.getElementById('Semester').value);
+
+            // Validation
+            if (semester < 1 || semester > 10) {
+                app.showError('El semestre debe estar entre 1 y 10.', false);
+                app.setLoading(false);
+                return;
+            }
+
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                app.showError('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.', false);
+                app.setLoading(false);
+                return;
+            }
+
+            if (password !== confirm_password) {
+                app.showError('Las contraseñas no coinciden.', false);
+                app.setLoading(false);
+                return;
+            }
+
             const userData = {
                 username: document.getElementById('username').value,
                 email: document.getElementById('email').value,
                 first_name: document.getElementById('first_name').value,
                 last_name: document.getElementById('last_name').value,
                 DateOfBirth: document.getElementById('DateOfBirth').value,
-                Semester: parseInt(document.getElementById('Semester').value),
+                Semester: semester,
                 FK_Role: 2, // Hardcoded to student
                 FK_Faculty: parseInt(document.getElementById('FK_Faculty').value),
                 FK_Program: parseInt(document.getElementById('FK_Program').value),
-                password: document.getElementById('password').value,
-                confirm_password: document.getElementById('confirm_password').value,
+                password: password,
+                confirm_password: confirm_password,
                 DataAuth: document.getElementById('DataAuth').checked,
                 FK_HealthcareProfessional: null
             };

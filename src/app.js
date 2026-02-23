@@ -29,11 +29,11 @@ const App = {
         }
     },
 
-    showError(message) {
+    showError(message, isSystemError = true) {
         const errorDiv = this.appContainer.querySelector('.error-message');
         if (errorDiv) {
-            console.error('System Error:', message); // Log the real error for debugging
-            errorDiv.textContent = 'Algo salió mal. Por favor, inténtelo de nuevo.';
+            console.error(isSystemError ? 'System Error:' : 'Validation Error:', message);
+            errorDiv.textContent = isSystemError ? 'Algo salió mal. Por favor, inténtelo de nuevo.' : message;
             errorDiv.style.display = 'block';
         }
     },
