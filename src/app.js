@@ -4,6 +4,10 @@ const App = {
         if (window.Navbar) {
             window.Navbar.init('navbar-placeholder');
         }
+        if (window.Footer) {
+            window.Footer.init('footer-placeholder');
+        }
+
         this.renderInitialView();
     },
 
