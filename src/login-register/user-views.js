@@ -40,7 +40,12 @@ const UserViews = {
                     </div>
                     <div class="form-group">
                         <label for="password">Contraseña</label>
-                        <input type="password" id="password" required placeholder="••••••••">
+                        <div class="password-input-container">
+                            <input type="password" id="password" required placeholder="••••••••">
+                            <button type="button" class="password-toggle" id="toggle-password" title="Mostrar/Ocultar contraseña">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" data-original-text="Siguiente">Siguiente</button>
                 </form>
@@ -49,6 +54,20 @@ const UserViews = {
         `;
 
         const form = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('toggle-password');
+
+        toggleBtn.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle icon
+            if (type === 'text') {
+                toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+            } else {
+                toggleBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            }
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -153,7 +172,7 @@ const UserViews = {
                     </div>
                     <div class="form-group">
                         <label for="Semester">Semestre</label>
-                        <input type="number" id="Semester" required min="1" max="12">
+                        <input type="number" id="Semester" required min="1" max="10">
                     </div>
                     
                     <!-- Role is statically set to Student (2) in the submit handler -->
@@ -172,11 +191,21 @@ const UserViews = {
 
                     <div class="form-group">
                         <label for="password">Contraseña</label>
-                        <input type="password" id="password" required>
+                        <div class="password-input-container">
+                            <input type="password" id="password" required>
+                            <button type="button" class="password-toggle" id="toggle-password-reg" title="Mostrar/Ocultar contraseña">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="confirm_password">Confirmar Contraseña</label>
-                        <input type="password" id="confirm_password" required>
+                        <div class="password-input-container">
+                            <input type="password" id="confirm_password" required>
+                            <button type="button" class="password-toggle" id="toggle-confirm-password" title="Mostrar/Ocultar contraseña">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -234,9 +263,51 @@ const UserViews = {
 
         loadPrograms();
 
+        // Password toggles for registration
+        const setupPasswordToggle = (inputId, toggleId) => {
+            const input = document.getElementById(inputId);
+            const toggle = document.getElementById(toggleId);
+            toggle.addEventListener('click', () => {
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                if (type === 'text') {
+                    toggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                } else {
+                    toggle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                }
+            });
+        };
+
+        setupPasswordToggle('password', 'toggle-password-reg');
+        setupPasswordToggle('confirm_password', 'toggle-confirm-password');
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);
+
+            const password = document.getElementById('password').value;
+            const confirm_password = document.getElementById('confirm_password').value;
+            const semester = parseInt(document.getElementById('Semester').value);
+
+            // Validation
+            if (semester < 1 || semester > 10) {
+                app.showError('El semestre debe estar entre 1 y 10.', false);
+                app.setLoading(false);
+                return;
+            }
+
+            const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                app.showError('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.', false);
+                app.setLoading(false);
+                return;
+            }
+
+            if (password !== confirm_password) {
+                app.showError('Las contraseñas no coinciden.', false);
+                app.setLoading(false);
+                return;
+            }
 
             const userData = {
                 username: document.getElementById('username').value,
@@ -244,12 +315,12 @@ const UserViews = {
                 first_name: document.getElementById('first_name').value,
                 last_name: document.getElementById('last_name').value,
                 DateOfBirth: document.getElementById('DateOfBirth').value,
-                Semester: parseInt(document.getElementById('Semester').value),
+                Semester: semester,
                 FK_Role: 2, // Hardcoded to student
                 FK_Faculty: parseInt(document.getElementById('FK_Faculty').value),
                 FK_Program: parseInt(document.getElementById('FK_Program').value),
-                password: document.getElementById('password').value,
-                confirm_password: document.getElementById('confirm_password').value,
+                password: password,
+                confirm_password: confirm_password,
                 DataAuth: document.getElementById('DataAuth').checked,
                 FK_HealthcareProfessional: null
             };
