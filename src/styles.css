@@ -33,9 +33,7 @@ body {
 
 #app {
     width: 100%;
-    max-width: 450px;
     padding: 2rem;
-    margin: 0 auto;
     /* Center the app container */
     flex: 1;
     /* This will push the footer to the bottom */
@@ -48,6 +46,9 @@ body {
     padding: 2.5rem;
     box-shadow: 0 10px 25px -5px rgba(37, 43, 54, 0.05), 0 8px 10px -6px rgba(37, 43, 54, 0.05);
     animation: fadeIn 0.5s ease-out;
+    max-width: 450px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 @keyframes fadeIn {

@@ -62,7 +62,7 @@
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 2rem;
 }
 
@@ -70,8 +70,12 @@
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 1.5rem;
-    padding: 2rem;
+    padding: 2.5rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
 }
 
 .dashboard-card:hover {
@@ -93,7 +97,7 @@
 }
 
 .card-title {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 700;
     margin-bottom: 1rem;
     color: #ffffff;
@@ -101,9 +105,10 @@
 
 .card-desc {
     color: var(--text-muted);
-    font-size: 0.95rem;
+    font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 1.5rem;
+    flex-grow: 1;
 }
 
 .card-action {
