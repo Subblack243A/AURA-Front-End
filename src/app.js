@@ -81,6 +81,12 @@ const App = {
         }
     },
 
+    renderEmotionHistory() {
+        if (window.EmotionViews) {
+            window.EmotionViews.render(this.appContainer, this);
+        }
+    },
+
     renderRegister() {
         if (window.UserViews) {
             window.UserViews.renderRegister(this);

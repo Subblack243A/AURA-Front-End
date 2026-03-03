@@ -35,7 +35,7 @@ const StudentDashboard = {
                         </div>
                         <h3 class="card-title">Mis Emociones</h3>
                         <p class="card-desc">Visualiza tu historial de estados de ánimo y cómo han evolucionado durante el semestre.</p>
-                        <a href="#" class="card-action">Ver historial →</a>
+                        <a href="#" class="card-action" id="view-emotion-history">Ver historial →</a>
                     </div>
 
                     <div class="dashboard-card">
@@ -68,6 +68,14 @@ const StudentDashboard = {
             if (window.Navbar) window.Navbar.update();
             appInstance.renderLogin();
         });
+
+        const historyBtn = document.getElementById('view-emotion-history');
+        if (historyBtn) {
+            historyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                appInstance.renderEmotionHistory();
+            });
+        }
     },
 
     renderAccessDenied(container) {
