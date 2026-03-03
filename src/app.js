@@ -22,10 +22,20 @@ const App = {
     },
 
     setLoading(isLoading) {
-        const btn = this.appContainer.querySelector('button[type="submit"]');
+        // Find any active submit or verify button
+        const btn = this.appContainer.querySelector('button[type="submit"], #verify-btn, #enable-camera-btn');
         if (btn) {
             btn.disabled = isLoading;
-            btn.textContent = isLoading ? 'Procesando...' : btn.dataset.originalText;
+            
+            if (isLoading) {
+                // Save original text if not already saved
+                if (!btn.dataset.originalText) {
+                    btn.dataset.originalText = btn.textContent;
+                }
+                btn.innerHTML = `<span class="spinner"></span> Procesando...`;
+            } else {
+                btn.textContent = btn.dataset.originalText || 'Siguiente';
+            }
         }
     },
 
