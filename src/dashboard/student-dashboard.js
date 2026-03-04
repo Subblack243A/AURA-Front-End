@@ -29,13 +29,13 @@ const StudentDashboard = {
                 </section>
 
                 <div class="dashboard-grid">
-                    <div class="dashboard-card">
+                    <div class="dashboard-card" id="card-emotion-history">
                         <div class="card-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"></path><path d="M7 16.5c1-1 2.5-1.5 5-1.5s4 .5 5 1.5"></path><path d="M5.5 12c1.5-1.5 3.5-2.5 6.5-2.5s5 1 6.5 2.5"></path><path d="M4 8c2.5-3 5.5-4.5 8-4.5s5.5 1.5 8 4.5"></path></svg>
                         </div>
                         <h3 class="card-title">Mis Emociones</h3>
                         <p class="card-desc">Visualiza tu historial de estados de ánimo y cómo han evolucionado durante el semestre.</p>
-                        <a href="#" class="card-action" id="view-emotion-history">Ver historial →</a>
+                        <a href="#" class="card-action">Ver historial →</a>
                     </div>
 
                     <div class="dashboard-card">
@@ -47,13 +47,13 @@ const StudentDashboard = {
                         <a href="#" class="card-action">Ir a encuestas →</a>
                     </div>
 
-                    <div class="dashboard-card" style="background: linear-gradient(to bottom right, rgba(110, 206, 210, 0.05), transparent);">
-                        <div class="card-icon" style="color: var(--primary);">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <div class="dashboard-card" id="card-emotion-register">
+                        <div class="card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path><path d="M12 7a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 8a3 3 0 1 1 3-3 3 3 0 0 1-3 3z"></path></svg>
                         </div>
-                        <h3 class="card-title">Orientación</h3>
-                        <p class="card-desc">¿Necesitas hablar con alguien? Contacta con el Profesional de la Salud asignado.</p>
-                        <a href="#" class="card-action" style="font-weight: 800;">Solicitar apoyo →</a>
+                        <h3 class="card-title">Registro emocional</h3>
+                        <p class="card-desc">Tómate un momento para registrar cómo te sientes hoy.</p>
+                        <a href="#" class="card-action">Registrar emoción →</a>
                     </div>
                 </div>
             </div>
@@ -69,11 +69,19 @@ const StudentDashboard = {
             appInstance.renderLogin();
         });
 
-        const historyBtn = document.getElementById('view-emotion-history');
-        if (historyBtn) {
-            historyBtn.addEventListener('click', (e) => {
+        const historyCard = document.getElementById('card-emotion-history');
+        if (historyCard) {
+            historyCard.addEventListener('click', (e) => {
                 e.preventDefault();
                 appInstance.renderEmotionHistory();
+            });
+        }
+
+        const registerCard = document.getElementById('card-emotion-register');
+        if (registerCard) {
+            registerCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                appInstance.renderEmotionRegister();
             });
         }
     },
