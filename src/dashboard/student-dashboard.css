@@ -85,6 +85,31 @@
     cursor: pointer;
 }
 
+.dashboard-card.locked {
+    opacity: 0.8;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-card.locked:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-card.locked .card-icon {
+    color: var(--text-muted);
+}
+
+#dashboard-timer {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(110, 206, 210, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
 .card-icon {
     width: 48px;
     height: 48px;

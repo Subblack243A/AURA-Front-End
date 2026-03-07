@@ -60,6 +60,49 @@ const StudentDashboard = {
         `;
 
         this.setupEventListeners(appInstance);
+        this.updateRegistrationCard();
+    },
+
+    async updateRegistrationCard() {
+        const registerCard = document.getElementById('card-emotion-register');
+        if (!registerCard) return;
+
+        const restriction = await window.EmotionViews.checkLastRegistration();
+        const actionLink = registerCard.querySelector('.card-action');
+        const descText = registerCard.querySelector('.card-desc');
+
+        if (!restriction.canRegister) {
+            registerCard.classList.add('locked');
+            actionLink.innerHTML = `<span id="dashboard-timer">--:--</span>`;
+            descText.textContent = 'Próximo registro disponible en:';
+            
+            const timerSpan = document.getElementById('dashboard-timer');
+            let remaining = restriction.remaining;
+
+            const updateDashboardTimer = () => {
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    registerCard.classList.remove('locked');
+                    actionLink.textContent = 'Registrar emoción →';
+                    descText.textContent = 'Tómate un momento para registrar cómo te sientes hoy.';
+                    return;
+                }
+
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+                let timeStr = "";
+                if (hours > 0) timeStr += `${hours}h `;
+                timeStr += `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                timerSpan.textContent = timeStr;
+                remaining -= 1000;
+            };
+
+            const interval = setInterval(updateDashboardTimer, 1000);
+            updateDashboardTimer();
+        }
     },
 
     setupEventListeners(appInstance) {

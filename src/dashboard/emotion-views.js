@@ -119,7 +119,45 @@ const EmotionViews = {
         new ApexCharts(container, options).render();
     },
 
+    async checkLastRegistration() {
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch('/api/emotion/register/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (!data.last_registrations || data.last_registrations.length < 3) return { canRegister: true };
+
+                const regs = data.last_registrations.map(d => new Date(d));
+                const serverTime = new Date(data.server_time);
+                
+                // Ráfaga: 3 registros en menos de 60 segundos
+                const burstDuration = regs[0] - regs[2];
+                const diffFromLast = serverTime - regs[0];
+                const threeMinutes = 3 * 60 * 1000;
+
+                if (burstDuration < 60 * 1000 && diffFromLast < threeMinutes) {
+                    return {
+                        canRegister: false,
+                        remaining: threeMinutes - diffFromLast
+                    };
+                }
+            }
+        } catch (err) {
+            console.error('Error checking last registration:', err);
+        }
+        return { canRegister: true };
+    },
+
     async renderRegister(container, appInstance) {
+        const restriction = await this.checkLastRegistration();
+        
+        if (!restriction.canRegister) {
+            this.renderLocked(container, restriction.remaining, appInstance);
+            return;
+        }
+
         const emotions = [
             { id: 1, name: 'Felicidad', icon: '😊' },
             { id: 2, name: 'Tristeza', icon: '😢' },
@@ -201,6 +239,73 @@ const EmotionViews = {
             feedback.style.color = 'var(--error)';
             feedback.style.display = 'block';
         }
+    },
+
+    renderLocked(container, remainingMs, appInstance) {
+        container.innerHTML = `
+            <div class="dashboard-container">
+                <section class="welcome-section">
+                    <div class="welcome-header">
+                        <div class="welcome-text">
+                            <h1>Registro emocional</h1>
+                            <p class="subtitle" style="text-align: left;">Has realizado demasiados registros seguidos. Por favor, espera un momento.</p>
+                        </div>
+                        <div class="welcome-actions">
+                            <button id="back-to-dash-reg" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                ← Volver al Panel
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="card" style="text-align: center; padding: 3rem;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+                    <h2 style="color: white; margin-bottom: 1rem;">Próximo registro disponible en:</h2>
+                    <div id="countdown-timer" style="font-size: 3rem; font-weight: bold; color: var(--primary); letter-spacing: 2px;">
+                        --:--
+                    </div>
+                    <p class="subtitle" style="margin-top: 1rem;">Podrás registrar cómo te sientes en 3 minutos.</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('back-to-dash-reg').addEventListener('click', () => {
+            appInstance.renderDashboard();
+        });
+
+        const timerDisplay = document.getElementById('countdown-timer');
+        let remaining = remainingMs;
+
+        const updateTimer = () => {
+            if (remaining <= 0) {
+                clearInterval(interval);
+                this.renderRegister(container, appInstance);
+                return;
+            }
+
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+            let timeStr = "";
+            if (hours > 0) timeStr += `${hours}h `;
+            timeStr += `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            timerDisplay.textContent = timeStr;
+            remaining -= 1000;
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        
+        // Cleanup interval when container is cleared or user navigates
+        const observer = new MutationObserver((mutations) => {
+            if (!document.body.contains(timerDisplay)) {
+                clearInterval(interval);
+                observer.disconnect();
+            }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 };
 
