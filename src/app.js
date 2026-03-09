@@ -99,6 +99,18 @@ const App = {
         }
     },
 
+    renderSurveyHistory() {
+        if (window.SurveyView) {
+            window.SurveyView.renderHistory(this.appContainer, this);
+        }
+    },
+
+    renderSurveyForm() {
+        if (window.SurveyView) {
+            window.SurveyView.renderForm(this.appContainer, this);
+        }
+    },
+
     renderDashboard() {
         const user = window.Auth.getUser();
         const role = window.Auth.getRole();
