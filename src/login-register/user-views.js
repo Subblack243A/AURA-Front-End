@@ -287,11 +287,18 @@ const UserViews = {
             e.preventDefault();
             app.setLoading(true);
 
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirm_password = document.getElementById('confirm_password').value;
             const semester = parseInt(document.getElementById('Semester').value);
 
             // Validation
+            if (!email.endsWith('@ucundinamarca.edu.co')) {
+                app.showError('Por favor, regístrate con tu correo institucional (@ucundinamarca.edu.co), no con uno personal.', false);
+                app.setLoading(false);
+                return;
+            }
+
             if (semester < 1 || semester > 10) {
                 app.showError('El semestre debe estar entre 1 y 10.', false);
                 app.setLoading(false);
