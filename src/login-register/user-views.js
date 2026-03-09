@@ -335,12 +335,15 @@ const UserViews = {
             };
 
             try {
+                console.log('Starting registration for:', userData.email);
                 // Step 1: Account creation (JSON)
                 await window.Auth.register(userData);
+                console.log('Registration successful, redirecting to OTP');
                 
-                // Step 2: Go to face capture for biometric setup
-                this.renderFaceCaptureForRegistration(app, userData.email, userData.password);
+                // Step 2: Show OTP Verification
+                UserViews.renderOTPVerification(app, userData.email, userData.password);
             } catch (err) {
+                console.error('Registration failed:', err);
                 app.showError(err.message);
             } finally {
                 app.setLoading(false);
@@ -348,6 +351,50 @@ const UserViews = {
         });
 
         document.getElementById('go-to-login').addEventListener('click', () => app.renderLogin());
+    },
+
+    renderOTPVerification(app, email, password) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Verificación de Correo</h1>
+                <p class="subtitle">Hemos enviado un código de 6 dígitos a <strong>${email}</strong>. Por favor, ingrésalo para activar tu cuenta.</p>
+                <div class="error-message"></div>
+                <form id="otp-form">
+                    <div class="form-group">
+                        <label for="otp_code">Código de Verificación</label>
+                        <input type="text" id="otp_code" required 
+                               placeholder="123456" 
+                               inputmode="numeric" 
+                               maxlength="6" 
+                               style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem; font-weight: 700;">
+                    </div>
+                    <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
+                </form>
+                <p class="subtitle" style="margin-top: 1.5rem;">¿No recibiste el código? Revisa tu carpeta de spam o espera unos minutos.</p>
+            </div>
+        `;
+
+        const form = document.getElementById('otp-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            app.setLoading(true);
+
+            const otpCode = document.getElementById('otp_code').value;
+
+            try {
+                console.log('Verifying OTP for:', email);
+                await window.Auth.verifyOTP(email, otpCode);
+                console.log('OTP verified, redirecting to Face Capture');
+                
+                // Success: Move to mandatory face capture (Step 3)
+                UserViews.renderFaceCaptureForRegistration(app, email, password);
+            } catch (err) {
+                console.error('OTP verification failed:', err);
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
     },
 
     renderFaceCaptureForRegistration(app, email, password) {
@@ -393,6 +440,7 @@ const UserViews = {
         window.CameraHandler.init(videoSelector);
 
         captureBtn.addEventListener('click', async () => {
+            app.setLoading(true);
             const imageFile = await window.CameraHandler.capturePhoto();
             if (imageFile) {
                 capturedImageBlob = imageFile;
@@ -405,8 +453,10 @@ const UserViews = {
                     confirmStep.style.display = 'block';
                 };
                 reader.readAsDataURL(imageFile);
+                app.setLoading(false);
             } else {
                 app.showError('No se pudo capturar la foto. Por favor intente de nuevo.');
+                app.setLoading(false);
             }
         });
 
@@ -421,9 +471,11 @@ const UserViews = {
             try {
                 if (!capturedImageBlob) throw new Error('No hay una imagen capturada');
 
-                // Step 2: Login with face capture. 
+                console.log('Finalizing registration with face capture for:', email);
+                // Step 3: Login with face capture. 
                 // Since this is the first login, backend will register the face embedding.
                 const loginData = await window.Auth.login(email, password, capturedImageBlob);
+                console.log('Biometric registration/login successful');
                 
                 window.CameraHandler.stop();
                 alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.`);
@@ -431,6 +483,7 @@ const UserViews = {
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
+                console.error('Face capture login failed:', err);
                 app.showError(err.message);
                 // If biometric login fails, allow retrying photo
                 confirmStep.style.display = 'none';

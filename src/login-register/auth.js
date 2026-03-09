@@ -58,6 +58,31 @@ const Auth = {
         return data;
     },
 
+    async verifyOTP(email, otpCode) {
+        const response = await fetch(`${API_URL}/verify-otp/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp_code: otpCode }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Verification failed');
+        }
+
+        // Store session
+        localStorage.setItem('aura_token', data.token);
+        localStorage.setItem('aura_user', JSON.stringify({
+            id: data.user_id,
+            username: data.username,
+            role: data.role
+        }));
+
+        return data;
+    },
+
     logout() {
         localStorage.removeItem('aura_token');
         localStorage.removeItem('aura_user');
