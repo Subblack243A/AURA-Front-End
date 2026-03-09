@@ -43,8 +43,16 @@ const Auth = {
 
         const data = await response.json();
         if (!response.ok) {
-            const errors = Object.values(data).flat().join('. ');
-            throw new Error(errors || 'Registration failed');
+            // Handle DRF validation errors which can be objects
+            let errorMsg = 'Registration failed';
+            if (typeof data === 'object') {
+                errorMsg = Object.entries(data)
+                    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+                    .join('. ');
+            } else if (data.error) {
+                errorMsg = data.error;
+            }
+            throw new Error(errorMsg);
         }
 
         return data;

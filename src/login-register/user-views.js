@@ -328,9 +328,11 @@ const UserViews = {
             };
 
             try {
+                // Step 1: Account creation (JSON)
                 await window.Auth.register(userData);
-                alert('Registro exitoso. Ahora puedes iniciar sesión.');
-                app.renderLogin();
+                
+                // Step 2: Go to face capture for biometric setup
+                this.renderFaceCaptureForRegistration(app, userData.email, userData.password);
             } catch (err) {
                 app.showError(err.message);
             } finally {
@@ -339,6 +341,102 @@ const UserViews = {
         });
 
         document.getElementById('go-to-login').addEventListener('click', () => app.renderLogin());
+    },
+
+    renderFaceCaptureForRegistration(app, email, password) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Captura de Rostro</h1>
+                <p class="subtitle">Tómate una foto para finalizar tu registro.</p>
+                <div class="error-message"></div>
+                
+                <div id="capture-step">
+                    <div class="camera-preview">
+                        <video id="registration-video" autoplay playsinline muted></video>
+                        <div class="camera-overlay"></div>
+                    </div>
+                    <button id="capture-btn">Capturar Foto</button>
+                    <button class="link-btn" id="cancel-capture">Volver</button>
+                </div>
+
+                <div id="confirm-step" style="display: none; text-align: center;">
+                    <div class="camera-preview">
+                        <img id="captured-preview" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <p class="subtitle" style="margin-top: 1rem; color: var(--primary); font-weight: 600;">¿Confirmas que este eres tú?</p>
+                    <button id="confirm-register-btn">Confirmo que este soy yo</button>
+                    <button class="link-btn" id="retry-capture">Retomar Foto</button>
+                </div>
+            </div>
+        `;
+
+        const videoSelector = '#registration-video';
+        const captureStep = document.getElementById('capture-step');
+        const confirmStep = document.getElementById('confirm-step');
+        const capturedPreview = document.getElementById('captured-preview');
+        
+        const captureBtn = document.getElementById('capture-btn');
+        const confirmBtn = document.getElementById('confirm-register-btn');
+        const retryBtn = document.getElementById('retry-capture');
+        const cancelBtn = document.getElementById('cancel-capture');
+
+        let capturedImageBlob = null;
+
+        // Init camera
+        window.CameraHandler.init(videoSelector);
+
+        captureBtn.addEventListener('click', async () => {
+            const imageFile = await window.CameraHandler.capturePhoto();
+            if (imageFile) {
+                capturedImageBlob = imageFile;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    capturedPreview.src = e.target.result;
+                    captureStep.style.display = 'none';
+                    confirmStep.style.display = 'block';
+                };
+                reader.readAsDataURL(imageFile);
+            } else {
+                app.showError('No se pudo capturar la foto. Por favor intente de nuevo.');
+            }
+        });
+
+        retryBtn.addEventListener('click', () => {
+            confirmStep.style.display = 'none';
+            captureStep.style.display = 'block';
+            capturedImageBlob = null;
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                if (!capturedImageBlob) throw new Error('No hay una imagen capturada');
+
+                // Step 2: Login with face capture. 
+                // Since this is the first login, backend will register the face embedding.
+                const loginData = await window.Auth.login(email, password, capturedImageBlob);
+                
+                window.CameraHandler.stop();
+                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.`);
+                
+                if (window.Navbar) window.Navbar.update();
+                app.renderDashboard();
+            } catch (err) {
+                app.showError(err.message);
+                // If biometric login fails, allow retrying photo
+                confirmStep.style.display = 'none';
+                captureStep.style.display = 'block';
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            window.CameraHandler.stop();
+            app.renderRegister();
+        });
     }
 };
 
