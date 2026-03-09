@@ -61,6 +61,11 @@ const StudentDashboard = {
 
         this.setupEventListeners(appInstance);
         this.updateRegistrationCard();
+        
+        // Trigger MBI-SS Survey Requirement Check
+        if (window.SurveyManager) {
+            window.SurveyManager.checkSurveyRequirement(appInstance);
+        }
     },
 
     async updateRegistrationCard() {
@@ -125,6 +130,14 @@ const StudentDashboard = {
             registerCard.addEventListener('click', (e) => {
                 e.preventDefault();
                 appInstance.renderEmotionRegister();
+            });
+        }
+
+        const surveyCard = document.querySelector('.dashboard-card:nth-child(2)');
+        if (surveyCard) {
+            surveyCard.addEventListener('click', (e) => {
+                e.preventDefault();
+                appInstance.renderSurveyHistory();
             });
         }
     },
