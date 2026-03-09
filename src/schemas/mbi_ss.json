@@ -1,0 +1,115 @@
+{
+  "survey_id": "mbi_ss",
+  "title": "Maslach Burnout Inventory - Student Survey",
+  "instructions": "Por favor, evalúa cada afirmación utilizando la escala proporcionada.",
+  "scale": {
+    "min_value": 0,
+    "max_value": 6,
+    "labels": {
+      "0": "Nunca / Ninguna vez",
+      "1": "Casi nunca",
+      "2": "A veces",
+      "3": "Regularmente",
+      "4": "Frecuentemente",
+      "5": "Casi siempre",
+      "6": "Siempre / Todos los días"
+    }
+  },
+  "dimensions": {
+    "EE": "Agotamiento o Desgaste Emocional",
+    "C": "Cinismo",
+    "AE": "Efectividad Académica"
+  },
+  "questions": [
+    {
+      "id": 1,
+      "dimension": "EE",
+      "is_inverse": false,
+      "text": "Las actividades académicas me tienen emocionalmente agotado."
+    },
+    {
+      "id": 2,
+      "dimension": "C",
+      "is_inverse": false,
+      "text": "He perdido el interés en mis estudios desde que empecé la universidad/colegio."
+    },
+    {
+      "id": 3,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "Puedo resolver de manera eficaz los problemas relacionados con mis estudios."
+    },
+    {
+      "id": 4,
+      "dimension": "EE",
+      "is_inverse": false,
+      "text": "Me encuentro agotado físicamente al final de un día en la universidad/colegio."
+    },
+    {
+      "id": 5,
+      "dimension": "C",
+      "is_inverse": false,
+      "text": "He perdido entusiasmo por los estudios."
+    },
+    {
+      "id": 6,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "Creo que contribuyo efectivamente con las clases a las que asisto."
+    },
+    {
+      "id": 7,
+      "dimension": "EE",
+      "is_inverse": false,
+      "text": "Estoy exhausto de tanto estudiar."
+    },
+    {
+      "id": 8,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "En mi opinión, soy un buen estudiante."
+    },
+    {
+      "id": 9,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "He aprendido muchas cosas interesantes durante el curso de mis estudios."
+    },
+    {
+      "id": 10,
+      "dimension": "EE",
+      "is_inverse": false,
+      "text": "Me siento cansado en la mañana cuando me levanto y tengo que afrontar otro día en la universidad/colegio."
+    },
+    {
+      "id": 11,
+      "dimension": "C",
+      "is_inverse": false,
+      "text": "Me he distanciado de mis estudios porque pienso que no serán realmente útiles."
+    },
+    {
+      "id": 12,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "Me estimula conseguir objetivos en mis estudios."
+    },
+    {
+      "id": 13,
+      "dimension": "EE",
+      "is_inverse": false,
+      "text": "Estudiar o ir a clases todo el día es realmente estresante para mí."
+    },
+    {
+      "id": 14,
+      "dimension": "C",
+      "is_inverse": false,
+      "text": "Dudo de la importancia y el valor de mis estudios."
+    },
+    {
+      "id": 15,
+      "dimension": "AE",
+      "is_inverse": true,
+      "text": "Durante las clases tengo la seguridad de que soy eficaz haciendo las cosas."
+    }
+  ]
+}
