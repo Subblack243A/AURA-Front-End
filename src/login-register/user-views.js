@@ -89,6 +89,8 @@ const UserViews = {
                     err.message.includes('Image file is required') ||
                     err.message.includes('Face registration required')) {
                     app.renderFaceVerification(email, password);
+                } else if (err.code === 'EMAIL_NOT_VERIFIED') {
+                    UserViews.renderOTPVerification(app, email, password);
                 } else {
                     app.showError(err.message, false); // Pass false as it's likely a validation/cred error
                 }
@@ -287,11 +289,18 @@ const UserViews = {
             e.preventDefault();
             app.setLoading(true);
 
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const confirm_password = document.getElementById('confirm_password').value;
             const semester = parseInt(document.getElementById('Semester').value);
 
             // Validation
+            if (!email.endsWith('@ucundinamarca.edu.co')) {
+                app.showError('Por favor, regístrate con tu correo institucional (@ucundinamarca.edu.co), no con uno personal.', false);
+                app.setLoading(false);
+                return;
+            }
+
             if (semester < 1 || semester > 10) {
                 app.showError('El semestre debe estar entre 1 y 10.', false);
                 app.setLoading(false);
@@ -328,10 +337,15 @@ const UserViews = {
             };
 
             try {
+                console.log('Starting registration for:', userData.email);
+                // Step 1: Account creation (JSON)
                 await window.Auth.register(userData);
-                alert('Registro exitoso. Ahora puedes iniciar sesión.');
-                app.renderLogin();
+                console.log('Registration successful, redirecting to OTP');
+                
+                // Step 2: Show OTP Verification
+                UserViews.renderOTPVerification(app, userData.email, userData.password);
             } catch (err) {
+                console.error('Registration failed:', err);
                 app.showError(err.message);
             } finally {
                 app.setLoading(false);
@@ -339,6 +353,190 @@ const UserViews = {
         });
 
         document.getElementById('go-to-login').addEventListener('click', () => app.renderLogin());
+    },
+
+    renderOTPVerification(app, email, password) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Verificación de Correo</h1>
+                <p class="subtitle">Hemos enviado un código de 6 dígitos a <strong>${email}</strong>. Por favor, ingrésalo para activar tu cuenta.</p>
+                <div class="error-message"></div>
+                <form id="otp-form">
+                    <div class="form-group">
+                        <label for="otp_code">Código de Verificación</label>
+                        <input type="text" id="otp_code" required 
+                               placeholder="123456" 
+                               inputmode="numeric" 
+                               maxlength="6" 
+                               style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem; font-weight: 700;">
+                    </div>
+                    <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
+                </form>
+                <p class="subtitle" style="margin-top: 1.5rem;">¿No recibiste el código? Revisa tu carpeta de spam o utiliza la opción de abajo.</p>
+                <div id="resend-container" style="text-align: center; margin-top: 1rem;">
+                    <button id="resend-otp-btn" class="link-btn" disabled>Reenviar Código (120s)</button>
+                </div>
+            </div>
+        `;
+
+        const form = document.getElementById('otp-form');
+        const resendBtn = document.getElementById('resend-otp-btn');
+        let countdown = 120;
+        let timerId = null;
+
+        const startTimer = () => {
+            countdown = 120;
+            resendBtn.disabled = true;
+            if (timerId) clearInterval(timerId);
+            
+            timerId = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(timerId);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'Reenviar Código';
+                } else {
+                    resendBtn.textContent = `Reenviar Código (${countdown}s)`;
+                }
+            }, 1000);
+        };
+
+        startTimer();
+
+        resendBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                await window.Auth.resendOTP(email);
+                alert('Nuevo código enviado a su correo.');
+                startTimer();
+            } catch (err) {
+                app.showError(err.message);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            app.setLoading(true);
+
+            const otpCode = document.getElementById('otp_code').value;
+
+            try {
+                console.log('Verifying OTP for:', email);
+                await window.Auth.verifyOTP(email, otpCode);
+                console.log('OTP verified, redirecting to Face Capture');
+                
+                // Success: Move to mandatory face capture (Step 3)
+                UserViews.renderFaceCaptureForRegistration(app, email, password);
+            } catch (err) {
+                console.error('OTP verification failed:', err);
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+    },
+
+    renderFaceCaptureForRegistration(app, email, password) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Captura de Rostro</h1>
+                <p class="subtitle">Tómate una foto para finalizar tu registro.</p>
+                <div class="error-message"></div>
+                
+                <div id="capture-step">
+                    <div class="camera-preview">
+                        <video id="registration-video" autoplay playsinline muted></video>
+                        <div class="camera-overlay"></div>
+                    </div>
+                    <button id="capture-btn">Capturar Foto</button>
+                    <button class="link-btn" id="cancel-capture">Volver</button>
+                </div>
+
+                <div id="confirm-step" style="display: none; text-align: center;">
+                    <div class="camera-preview">
+                        <img id="captured-preview" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <p class="subtitle" style="margin-top: 1rem; color: var(--primary); font-weight: 600;">¿Confirmas que este eres tú?</p>
+                    <button id="confirm-register-btn">Confirmo que este soy yo</button>
+                    <button class="link-btn" id="retry-capture">Retomar Foto</button>
+                </div>
+            </div>
+        `;
+
+        const videoSelector = '#registration-video';
+        const captureStep = document.getElementById('capture-step');
+        const confirmStep = document.getElementById('confirm-step');
+        const capturedPreview = document.getElementById('captured-preview');
+        
+        const captureBtn = document.getElementById('capture-btn');
+        const confirmBtn = document.getElementById('confirm-register-btn');
+        const retryBtn = document.getElementById('retry-capture');
+        const cancelBtn = document.getElementById('cancel-capture');
+
+        let capturedImageBlob = null;
+
+        // Init camera
+        window.CameraHandler.init(videoSelector);
+
+        captureBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            const imageFile = await window.CameraHandler.capturePhoto();
+            if (imageFile) {
+                capturedImageBlob = imageFile;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    capturedPreview.src = e.target.result;
+                    captureStep.style.display = 'none';
+                    confirmStep.style.display = 'block';
+                };
+                reader.readAsDataURL(imageFile);
+                app.setLoading(false);
+            } else {
+                app.showError('No se pudo capturar la foto. Por favor intente de nuevo.');
+                app.setLoading(false);
+            }
+        });
+
+        retryBtn.addEventListener('click', () => {
+            confirmStep.style.display = 'none';
+            captureStep.style.display = 'block';
+            capturedImageBlob = null;
+        });
+
+        confirmBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                if (!capturedImageBlob) throw new Error('No hay una imagen capturada');
+
+                console.log('Finalizing registration with face capture for:', email);
+                // Step 3: Login with face capture. 
+                // Since this is the first login, backend will register the face embedding.
+                const loginData = await window.Auth.login(email, password, capturedImageBlob);
+                console.log('Biometric registration/login successful');
+                
+                window.CameraHandler.stop();
+                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.`);
+                
+                if (window.Navbar) window.Navbar.update();
+                app.renderDashboard();
+            } catch (err) {
+                console.error('Face capture login failed:', err);
+                app.showError(err.message);
+                // If biometric login fails, allow retrying photo
+                confirmStep.style.display = 'none';
+                captureStep.style.display = 'block';
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            window.CameraHandler.stop();
+            app.renderRegister();
+        });
     }
 };
 

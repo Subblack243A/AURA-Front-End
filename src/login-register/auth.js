@@ -43,8 +43,58 @@ const Auth = {
 
         const data = await response.json();
         if (!response.ok) {
-            const errors = Object.values(data).flat().join('. ');
-            throw new Error(errors || 'Registration failed');
+            // Handle DRF validation errors which can be objects
+            let errorMsg = 'Registration failed';
+            if (typeof data === 'object') {
+                errorMsg = Object.entries(data)
+                    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+                    .join('. ');
+            } else if (data.error) {
+                errorMsg = data.error;
+            }
+            throw new Error(errorMsg);
+        }
+
+        return data;
+    },
+
+    async verifyOTP(email, otpCode) {
+        const response = await fetch(`${API_URL}/verify-otp/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp_code: otpCode }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Verification failed');
+        }
+
+        // Store session
+        localStorage.setItem('aura_token', data.token);
+        localStorage.setItem('aura_user', JSON.stringify({
+            id: data.user_id,
+            username: data.username,
+            role: data.role
+        }));
+
+        return data;
+    },
+
+    async resendOTP(email) {
+        const response = await fetch(`${API_URL}/resend-otp/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Resend failed');
         }
 
         return data;

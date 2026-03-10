@@ -22,21 +22,24 @@ const App = {
     },
 
     setLoading(isLoading) {
-        // Find any active submit or verify button
-        const btn = this.appContainer.querySelector('button[type="submit"], #verify-btn, #enable-camera-btn');
-        if (btn) {
+        // Find all interactive buttons in the current view that should be disabled
+        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #enable-camera-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
+        
+        buttons.forEach(btn => {
             btn.disabled = isLoading;
             
-            if (isLoading) {
-                // Save original text if not already saved
-                if (!btn.dataset.originalText) {
-                    btn.dataset.originalText = btn.textContent;
+            // Only change text/spinner for the "primary" action buttons
+            if (btn.type === 'submit' || btn.id === 'verify-btn' || btn.id === 'capture-btn' || btn.id === 'confirm-register-btn') {
+                if (isLoading) {
+                    if (!btn.dataset.originalText) {
+                        btn.dataset.originalText = btn.textContent;
+                    }
+                    btn.innerHTML = `<span class="spinner"></span> Procesando...`;
+                } else {
+                    btn.textContent = btn.dataset.originalText || btn.textContent;
                 }
-                btn.innerHTML = `<span class="spinner"></span> Procesando...`;
-            } else {
-                btn.textContent = btn.dataset.originalText || 'Siguiente';
             }
-        }
+        });
     },
 
     showError(message, isSystemError = true) {
