@@ -89,6 +89,8 @@ const UserViews = {
                     err.message.includes('Image file is required') ||
                     err.message.includes('Face registration required')) {
                     app.renderFaceVerification(email, password);
+                } else if (err.code === 'EMAIL_NOT_VERIFIED') {
+                    UserViews.renderOTPVerification(app, email, password);
                 } else {
                     app.showError(err.message, false); // Pass false as it's likely a validation/cred error
                 }
@@ -370,11 +372,49 @@ const UserViews = {
                     </div>
                     <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
                 </form>
-                <p class="subtitle" style="margin-top: 1.5rem;">¿No recibiste el código? Revisa tu carpeta de spam o espera unos minutos.</p>
+                <p class="subtitle" style="margin-top: 1.5rem;">¿No recibiste el código? Revisa tu carpeta de spam o utiliza la opción de abajo.</p>
+                <div id="resend-container" style="text-align: center; margin-top: 1rem;">
+                    <button id="resend-otp-btn" class="link-btn" disabled>Reenviar Código (120s)</button>
+                </div>
             </div>
         `;
 
         const form = document.getElementById('otp-form');
+        const resendBtn = document.getElementById('resend-otp-btn');
+        let countdown = 120;
+        let timerId = null;
+
+        const startTimer = () => {
+            countdown = 120;
+            resendBtn.disabled = true;
+            if (timerId) clearInterval(timerId);
+            
+            timerId = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(timerId);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'Reenviar Código';
+                } else {
+                    resendBtn.textContent = `Reenviar Código (${countdown}s)`;
+                }
+            }, 1000);
+        };
+
+        startTimer();
+
+        resendBtn.addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                await window.Auth.resendOTP(email);
+                alert('Nuevo código enviado a su correo.');
+                startTimer();
+            } catch (err) {
+                app.showError(err.message);
+            } finally {
+                app.setLoading(false);
+            }
+        });
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);

@@ -83,6 +83,23 @@ const Auth = {
         return data;
     },
 
+    async resendOTP(email) {
+        const response = await fetch(`${API_URL}/resend-otp/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Resend failed');
+        }
+
+        return data;
+    },
+
     logout() {
         localStorage.removeItem('aura_token');
         localStorage.removeItem('aura_user');
