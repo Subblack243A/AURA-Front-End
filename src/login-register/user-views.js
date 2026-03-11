@@ -147,7 +147,7 @@ const UserViews = {
         });
     },
 
-    renderRegister(app) {
+    renderRegister(app, prefillData = null) {
         app.appContainer.innerHTML = `
             <div class="card">
                 <h1>Registro</h1>
@@ -265,7 +265,22 @@ const UserViews = {
             }
         });
 
-        loadPrograms();
+        loadPrograms().then(() => {
+            // Pre-fill form if data is provided (e.g. coming back from OTP correction)
+            if (prefillData) {
+                if (prefillData.username) document.getElementById('username').value = prefillData.username;
+                if (prefillData.email) document.getElementById('email').value = prefillData.email;
+                if (prefillData.first_name) document.getElementById('first_name').value = prefillData.first_name;
+                if (prefillData.last_name) document.getElementById('last_name').value = prefillData.last_name;
+                if (prefillData.DateOfBirth) document.getElementById('DateOfBirth').value = prefillData.DateOfBirth;
+                if (prefillData.Semester) document.getElementById('Semester').value = prefillData.Semester;
+                if (prefillData.FK_Program) {
+                    programSelect.value = prefillData.FK_Program;
+                    // Trigger faculty auto-fill
+                    programSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        });
 
         // Password toggles for registration
         const setupPasswordToggle = (inputId, toggleId) => {
@@ -342,8 +357,8 @@ const UserViews = {
                 await window.Auth.register(userData);
                 console.log('Registration successful, redirecting to OTP');
                 
-                // Step 2: Show OTP Verification
-                UserViews.renderOTPVerification(app, userData.email, userData.password);
+                // Step 2: Show OTP Verification (pass full userData for possible correction)
+                UserViews.renderOTPVerification(app, userData);
             } catch (err) {
                 console.error('Registration failed:', err);
                 app.showError(err.message);
@@ -355,7 +370,12 @@ const UserViews = {
         document.getElementById('go-to-login').addEventListener('click', () => app.renderLogin());
     },
 
-    renderOTPVerification(app, email, password) {
+    renderOTPVerification(app, userData) {
+        // Support both legacy call (email, password) and new call (userData object)
+        const isLegacy = typeof userData === 'string';
+        const email = isLegacy ? userData : userData.email;
+        const password = isLegacy ? arguments[2] : userData.password;
+
         app.appContainer.innerHTML = `
             <div class="card">
                 <h1>Verificación de Correo</h1>
@@ -376,11 +396,15 @@ const UserViews = {
                 <div id="resend-container" style="text-align: center; margin-top: 1rem;">
                     <button id="resend-otp-btn" class="link-btn" disabled>Reenviar Código (120s)</button>
                 </div>
+                <hr style="border: none; border-top: 1px solid var(--border, #eee); margin: 1.5rem 0;">
+                <p class="subtitle" style="font-size: 0.9rem;">¿Pusiste el correo incorrecto u otros datos erróneos?</p>
+                <button class="link-btn" id="edit-registration-btn" style="color: var(--primary);">✏️ Corregir mis datos</button>
             </div>
         `;
 
         const form = document.getElementById('otp-form');
         const resendBtn = document.getElementById('resend-otp-btn');
+        const editBtn = document.getElementById('edit-registration-btn');
         let countdown = 120;
         let timerId = null;
 
@@ -415,6 +439,51 @@ const UserViews = {
                 app.setLoading(false);
             }
         });
+
+        editBtn.addEventListener('click', async () => {
+            const confirmed = confirm(
+                `¿Deseas volver al formulario de registro para corregir tus datos?\n\nSe cancelará el registro actual para "${email}".`
+            );
+            if (!confirmed) return;
+
+            app.setLoading(true);
+            try {
+                // Remove the unverified user so they can re-register cleanly
+                const apiBase = window.API_URL || '/api';
+                const response = await fetch(`${apiBase}/cancel-registration/`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'No se pudo cancelar el registro.');
+                }
+
+                console.log('Registration cancelled, returning to register form with prefilled data.');
+                if (timerId) clearInterval(timerId);
+
+                // Return to register form with data pre-filled (excluding password for security)
+                const prefill = isLegacy ? { email } : {
+                    username: userData.username,
+                    email: userData.email,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    DateOfBirth: userData.DateOfBirth,
+                    Semester: userData.Semester,
+                    FK_Program: userData.FK_Program,
+                    FK_Faculty: userData.FK_Faculty,
+                };
+                UserViews.renderRegister(app, prefill);
+            } catch (err) {
+                console.error('Failed to cancel registration:', err);
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);
@@ -426,6 +495,7 @@ const UserViews = {
                 await window.Auth.verifyOTP(email, otpCode);
                 console.log('OTP verified, redirecting to Face Capture');
                 
+                if (timerId) clearInterval(timerId);
                 // Success: Move to mandatory face capture (Step 3)
                 UserViews.renderFaceCaptureForRegistration(app, email, password);
             } catch (err) {
