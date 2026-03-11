@@ -158,13 +158,25 @@ const EmotionViews = {
             return;
         }
 
+        const getEmojiSVG = (id) => {
+            const icons = {
+                1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`, // Felicidad
+                2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`, // Tristeza
+                3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`, // Desagrado
+                4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><path d="M7.5 8 9 9"/><path d="M16.5 8 15 9"/></svg>`, // Ira
+                5: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="15" r="2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`, // Sorpresa
+                6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 15h2s1 1 2 1 2-1 2-1 1 1 2 1"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>` // Miedo
+            };
+            return icons[id] || '';
+        };
+
         const emotions = [
-            { id: 1, name: 'Felicidad', icon: '😊' },
-            { id: 2, name: 'Tristeza', icon: '😢' },
-            { id: 3, name: 'Desagrado', icon: '🤢' },
-            { id: 4, name: 'Ira', icon: '😡' },
-            { id: 5, name: 'Sorpresa', icon: '😲' },
-            { id: 6, name: 'Miedo', icon: '😨' }
+            { id: 1, name: 'Felicidad', icon: getEmojiSVG(1) },
+            { id: 2, name: 'Tristeza', icon: getEmojiSVG(2) },
+            { id: 3, name: 'Desagrado', icon: getEmojiSVG(3) },
+            { id: 4, name: 'Ira', icon: getEmojiSVG(4) },
+            { id: 5, name: 'Sorpresa', icon: getEmojiSVG(5) },
+            { id: 6, name: 'Miedo', icon: getEmojiSVG(6) }
         ];
 
         container.innerHTML = `
@@ -341,13 +353,25 @@ const EmotionViews = {
      * No "back" button — the user MUST register before proceeding.
      */
     async renderMandatoryRegister(container, appInstance) {
+        const getEmojiSVG = (id) => {
+            const icons = {
+                1: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+                2: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+                3: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+                4: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><path d="M7.5 8 9 9"/><path d="M16.5 8 15 9"/></svg>`,
+                5: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="15" r="2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`,
+                6: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 15h2s1 1 2 1 2-1 2-1 1 1 2 1"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>` // Miedo
+            };
+            return icons[id] || '';
+        };
+
         const emotions = [
-            { id: 1, name: 'Felicidad', icon: '😊' },
-            { id: 2, name: 'Tristeza', icon: '😢' },
-            { id: 3, name: 'Desagrado', icon: '🤢' },
-            { id: 4, name: 'Ira', icon: '😡' },
-            { id: 5, name: 'Sorpresa', icon: '😲' },
-            { id: 6, name: 'Miedo', icon: '😨' }
+            { id: 1, name: 'Felicidad', icon: getEmojiSVG(1) },
+            { id: 2, name: 'Tristeza', icon: getEmojiSVG(2) },
+            { id: 3, name: 'Desagrado', icon: getEmojiSVG(3) },
+            { id: 4, name: 'Ira', icon: getEmojiSVG(4) },
+            { id: 5, name: 'Sorpresa', icon: getEmojiSVG(5) },
+            { id: 6, name: 'Miedo', icon: getEmojiSVG(6) }
         ];
 
         container.innerHTML = `
