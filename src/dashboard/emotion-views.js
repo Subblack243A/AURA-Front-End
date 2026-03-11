@@ -306,6 +306,115 @@ const EmotionViews = {
             }
         });
         observer.observe(document.body, { childList: true, subtree: true });
+    },
+    /**
+     * Checks whether the user needs to register an emotion before accessing the dashboard.
+     * Returns true if: no previous registration exists OR last one was > 24 hours ago.
+     */
+    async checkNeedsEmotionRegistration() {
+        const token = window.Auth.getToken();
+        if (!token) return false; // Not logged in, skip
+        try {
+            const response = await fetch('/api/emotion/register/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (!response.ok) return false;
+
+            const data = await response.json();
+
+            // No previous registration at all
+            if (!data.last_manual_registration) return true;
+
+            const lastDate = new Date(data.last_manual_registration);
+            const serverTime = new Date(data.server_time);
+            const hours24 = 24 * 60 * 60 * 1000;
+
+            return (serverTime - lastDate) > hours24;
+        } catch (err) {
+            console.error('Error checking 24h emotion requirement:', err);
+            return false; // On error, don't block the user
+        }
+    },
+
+    /**
+     * Renders the mandatory emotion registration screen.
+     * No "back" button — the user MUST register before proceeding.
+     */
+    async renderMandatoryRegister(container, appInstance) {
+        const emotions = [
+            { id: 1, name: 'Felicidad', icon: '😊' },
+            { id: 2, name: 'Tristeza', icon: '😢' },
+            { id: 3, name: 'Desagrado', icon: '🤢' },
+            { id: 4, name: 'Ira', icon: '😡' },
+            { id: 5, name: 'Sorpresa', icon: '😲' },
+            { id: 6, name: 'Miedo', icon: '😨' }
+        ];
+
+        container.innerHTML = `
+            <div class="dashboard-container">
+                <section class="welcome-section">
+                    <div class="welcome-header">
+                        <div class="welcome-text">
+                            <h1>¿Cómo te sientes hoy?</h1>
+                            <p class="subtitle" style="text-align: left;">
+                                Han pasado más de 24 horas desde tu último registro emocional.
+                                Selecciona la emoción que mejor represente cómo te sientes ahora para continuar.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="emotion-selection-grid">
+                    ${emotions.map(emotion => `
+                        <div class="emotion-card" data-id="${emotion.id}">
+                            <div class="emotion-icon">${emotion.icon}</div>
+                            <div class="emotion-name">${emotion.name}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div id="mandatory-registration-feedback" style="text-align: center; margin-top: 2rem; display: none;"></div>
+            </div>
+        `;
+
+        const cards = container.querySelectorAll('.emotion-card');
+        cards.forEach(card => {
+            card.addEventListener('click', async () => {
+                const emotionId = parseInt(card.dataset.id);
+                const token = window.Auth.getToken();
+                const feedback = document.getElementById('mandatory-registration-feedback');
+
+                // Disable all cards while submitting
+                cards.forEach(c => c.style.pointerEvents = 'none');
+
+                try {
+                    const response = await fetch('/api/emotion/register/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Token ${token}`
+                        },
+                        body: JSON.stringify({ emotion: emotionId })
+                    });
+
+                    if (response.ok) {
+                        feedback.textContent = '¡Emoción registrada! Accediendo al panel...';
+                        feedback.style.color = 'var(--primary)';
+                        feedback.style.display = 'block';
+                        console.log('Mandatory emotion registered, redirecting to dashboard.');
+                        setTimeout(() => appInstance.renderDashboard(), 1200);
+                    } else {
+                        const errData = await response.json();
+                        throw new Error(errData.error || errData.detail || 'Error al registrar la emoción.');
+                    }
+                } catch (err) {
+                    feedback.textContent = err.message;
+                    feedback.style.color = 'var(--error, #f87171)';
+                    feedback.style.display = 'block';
+                    // Re-enable cards so the user can retry
+                    cards.forEach(c => c.style.pointerEvents = '');
+                }
+            });
+        });
     }
 };
 
