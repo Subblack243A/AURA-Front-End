@@ -131,6 +131,12 @@ const App = {
         }
     },
 
+    renderProfile() {
+        if (window.ProfileView) {
+            window.ProfileView.render(this.appContainer, this);
+        }
+    },
+
     async renderDashboard(skipCheck = false) {
         const user = window.Auth.getUser();
         const role = window.Auth.getRole();

@@ -48,6 +48,14 @@ const Navbar = {
                 if (window.App) window.App.renderDashboard();
             });
         }
+        
+        const profileLink = document.getElementById('nav-profile');
+        if (profileLink) {
+            profileLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.App) window.App.renderProfile();
+            });
+        }
     },
 
     addAuthLinkListeners() {

@@ -361,7 +361,19 @@ const UserViews = {
                 UserViews.renderOTPVerification(app, userData);
             } catch (err) {
                 console.error('Registration failed:', err);
-                app.showError(err.message);
+                
+                // Check if it's the specific "user already exists" error
+                if (err.message && err.message.includes('USER_ALREADY_EXISTS')) {
+                    app.showError('Este usuario ya tiene una cuenta activa. Por favor, inicia sesión.', false);
+                } else if (err.message && (err.message.includes('email:') || err.message.includes('username:'))) {
+                    // Extract the message after the field name prefix
+                    const msg = err.message.includes('email:') ? 
+                        err.message.split('email: ')[1] : 
+                        err.message.split('username: ')[1];
+                    app.showError(msg.split('.')[0] || msg, false); // take first sentence/part
+                } else {
+                    app.showError(err.message);
+                }
             } finally {
                 app.setLoading(false);
             }
