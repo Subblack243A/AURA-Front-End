@@ -168,6 +168,8 @@ const App = {
             } else {
                 this.appContainer.innerHTML = `<p>Error: Student Dashboard not loaded.</p>`;
             }
+        } else if (role === 'Administrador' && window.AdminDashboard) {
+            window.AdminDashboard.render(this.appContainer, this);
         } else {
             // Default or other role dashboards
             this.appContainer.innerHTML = `
