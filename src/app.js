@@ -143,6 +143,18 @@ const App = {
         }
     },
 
+    renderAdminReports() {
+        if (window.AdminReports) {
+            window.AdminReports.renderLanding(this.appContainer, this);
+        }
+    },
+
+    renderAdminCharts() {
+        if (window.AdminReports) {
+            window.AdminReports.renderCharts(this.appContainer, this);
+        }
+    },
+
     async renderDashboard(skipCheck = false) {
         const user = window.Auth.getUser();
         const role = window.Auth.getRole();

@@ -69,7 +69,7 @@ const AdminDashboard = {
         });
 
         document.getElementById('admin-reports-card').addEventListener('click', () => {
-            alert('Módulo de Reportes Generales en desarrollo para Aura v1.0.');
+            app.renderAdminReports();
         });
 
         document.getElementById('admin-logout-btn').addEventListener('click', () => {

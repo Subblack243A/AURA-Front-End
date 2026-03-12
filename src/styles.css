@@ -590,3 +590,73 @@ button:active {
     height: 60px;
   }
 }
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    padding-top: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide UI elements */
+  .no-print,
+  .navbar,
+  .footer,
+  #navbar-placeholder,
+  #footer-placeholder {
+    display: none !important;
+  }
+
+  /* Display print header */
+  .print-only {
+    display: block !important;
+  }
+
+  #app {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .admin-charts-wrapper {
+    max-width: 100% !important;
+  }
+
+  .charts-grid {
+    display: block !important; /* Stack charts for printing */
+  }
+
+  .card {
+    background: transparent !important;
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 2rem !important;
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+    animation: none !important;
+  }
+
+  .card-icon {
+    display: none !important;
+  }
+
+  h1, h2, h3 {
+    color: #000 !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+  }
+
+  .subtitle {
+    color: #666 !important;
+  }
+}
