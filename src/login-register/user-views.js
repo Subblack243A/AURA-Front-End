@@ -49,6 +49,9 @@ const UserViews = {
                     </div>
                     <button type="submit" data-original-text="Siguiente">Siguiente</button>
                 </form>
+                <div style="text-align: right; margin-top: 0.5rem;">
+                    <button class="link-btn" id="forgot-password-link" style="font-size: 0.85rem; padding: 0;">¿Olvidaste tu contraseña?</button>
+                </div>
                 <button class="link-btn" id="go-to-register">¿No tienes cuenta? Regístrate</button>
             </div>
         `;
@@ -98,8 +101,135 @@ const UserViews = {
                 app.setLoading(false);
             }
         });
+        
+        document.getElementById('forgot-password-link').addEventListener('click', () => {
+            if (app.renderForgotEmail) app.renderForgotEmail();
+            else UserViews.renderForgotEmail(app);
+        });
 
         document.getElementById('go-to-register').addEventListener('click', () => app.renderRegister());
+    },
+
+    renderForgotEmail(app) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Recuperar Contraseña</h1>
+                <p class="subtitle">Ingresa tu correo institucional para recibir un código de recuperación.</p>
+                <div class="error-message"></div>
+                <form id="forgot-email-form">
+                    <div class="form-group">
+                        <label for="recovery-email">Correo Electrónico</label>
+                        <input type="email" id="recovery-email" required placeholder="ejemplo@ucundinamarca.edu.co">
+                    </div>
+                    <button type="submit" data-original-text="Enviar Código">Enviar Código</button>
+                </form>
+                <button class="link-btn" id="back-to-login">Volver al Inicio de Sesión</button>
+            </div>
+        `;
+
+        document.getElementById('forgot-email-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('recovery-email').value;
+            app.setLoading(true);
+            try {
+                await window.Auth.requestPasswordResetOTP(email);
+                UserViews.renderRecoveryOTP(app, email);
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('back-to-login').addEventListener('click', () => app.renderLogin());
+    },
+
+    renderRecoveryOTP(app, email) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Verificación</h1>
+                <p class="subtitle">Hemos enviado un código a <strong>${email}</strong>. Ingrésalo para continuar.</p>
+                <div class="error-message"></div>
+                <form id="recovery-otp-form">
+                    <div class="form-group">
+                        <label for="recovery-otp">Código de 6 dígitos</label>
+                        <input type="text" id="recovery-otp" required 
+                               placeholder="123456" 
+                               maxlength="6" 
+                               style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem;">
+                    </div>
+                    <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
+                </form>
+                <button class="link-btn" id="resend-recovery-otp">Reenviar Código</button>
+                <button class="link-btn" id="back-to-email">Cambiar Correo</button>
+            </div>
+        `;
+
+        document.getElementById('recovery-otp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp_code = document.getElementById('recovery-otp').value;
+            app.setLoading(true);
+            try {
+                await window.Auth.verifyPasswordResetOTP(email, otp_code);
+                UserViews.renderResetPassword(app, email, otp_code);
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('resend-recovery-otp').addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                await window.Auth.requestPasswordResetOTP(email);
+                alert('Nuevo código enviado.');
+            } catch (err) {
+                app.showError(err.message);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('back-to-email').addEventListener('click', () => UserViews.renderForgotEmail(app));
+    },
+
+    renderResetPassword(app, email, otp_code) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Nueva Contraseña</h1>
+                <p class="subtitle">Establece tu nueva contraseña para acceder a Aura.</p>
+                <div class="error-message"></div>
+                <form id="reset-password-form">
+                    <div class="form-group">
+                        <label for="new-password">Nueva Contraseña</label>
+                        <input type="password" id="new-password" required placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password">Confirmar Contraseña</label>
+                        <input type="password" id="confirm-new-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" data-original-text="Actualizar Contraseña">Actualizar Contraseña</button>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('new-password').value;
+            const confirm_password = document.getElementById('confirm-new-password').value;
+
+            app.setLoading(true);
+            try {
+                await window.Auth.resetPassword(email, otp_code, password, confirm_password);
+                alert('Contraseña actualizada con éxito. Ahora puedes iniciar sesión.');
+                app.renderLogin();
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
     },
 
     renderFaceVerification(app, email, password) {

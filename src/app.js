@@ -95,6 +95,12 @@ const App = {
         }
     },
 
+    renderForgotEmail() {
+        if (window.UserViews) {
+            window.UserViews.renderForgotEmail(this);
+        }
+    },
+
     renderFaceVerification(email, password) {
         if (window.UserViews) {
             window.UserViews.renderFaceVerification(this, email, password);
