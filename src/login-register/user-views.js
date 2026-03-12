@@ -80,14 +80,13 @@ const UserViews = {
             const password = document.getElementById('password').value;
 
             try {
-                // Try login without image first to check credentials
+                // Try login directly. Backend handles role-based biometric requirements.
                 await window.Auth.login(email, password, null);
 
-                // If by some chance it succeeds (e.g. backend doesn't require image for this user), go to dashboard
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
-                // If credentials are correct but face registration is missing or image is required
+                // If credentials are correct but face registration is missing or image is required (Student)
                 if (err.code === 'FACE_REGISTRATION_REQUIRED' ||
                     err.message.includes('Image file is required') ||
                     err.message.includes('Face registration required')) {
@@ -95,7 +94,7 @@ const UserViews = {
                 } else if (err.code === 'EMAIL_NOT_VERIFIED') {
                     UserViews.renderOTPVerification(app, email, password);
                 } else {
-                    app.showError(err.message, false); // Pass false as it's likely a validation/cred error
+                    app.showError(err.message, false);
                 }
             } finally {
                 app.setLoading(false);

@@ -62,9 +62,25 @@ const StudentDashboard = {
         this.setupEventListeners(appInstance);
         this.updateRegistrationCard();
         
-        // Trigger MBI-SS Survey Requirement Check
-        if (window.SurveyManager) {
-            window.SurveyManager.checkSurveyRequirement(appInstance);
+        // Check for 24h emotion registration requirement (Student only)
+        if (window.EmotionViews) {
+            window.EmotionViews.checkNeedsEmotionRegistration().then(needsRegistration => {
+                if (needsRegistration) {
+                    console.log('24h emotion check: registration required.');
+                    window.EmotionViews.renderMandatoryRegister(container, appInstance);
+                    return;
+                }
+                
+                // If emotion is OK, then check for surveys
+                if (window.SurveyManager) {
+                    window.SurveyManager.checkSurveyRequirement(appInstance);
+                }
+            }).catch(err => {
+                console.error('Emotion check failed, still checking surveys:', err);
+                if (window.SurveyManager) {
+                    window.SurveyManager.checkSurveyRequirement(appInstance);
+                }
+            });
         }
     },
 
