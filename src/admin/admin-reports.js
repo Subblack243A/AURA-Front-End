@@ -41,7 +41,7 @@ const AdminReports = {
         `;
 
         document.getElementById('go-to-charts-btn').addEventListener('click', () => app.renderAdminCharts());
-        document.getElementById('go-to-docs-btn').addEventListener('click', () => alert('Reportes detallados próximamente.'));
+        document.getElementById('go-to-docs-btn').addEventListener('click', () => this.renderSummary(appContainer, app));
         document.getElementById('back-to-dash-btn').addEventListener('click', () => app.renderDashboard());
     },
 
@@ -137,6 +137,201 @@ const AdminReports = {
         } catch (err) {
             console.error(err);
         }
+    },
+
+    async renderSummary(appContainer, app) {
+        appContainer.innerHTML = `
+            <div class="admin-summary-wrapper" style="max-width: 1200px; margin: 0 auto; padding-top: 1rem;">
+                <div class="dashboard-header" style="text-align: center; margin-bottom: 3rem;">
+                    <h1 style="font-size: 2.2rem; background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        Resumen General Académico
+                    </h1>
+                    <p class="subtitle">Consolidado de métricas y estadísticas de la plataforma.</p>
+                    <button id="btn-download-pdf" class="primary-btn" style="width: auto; margin: 1.5rem auto; padding: 0.75rem 2rem; display: flex; gap: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Descargar Reporte en PDF
+                    </button>
+                </div>
+
+                <div class="summary-totals" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                    <div class="card" style="text-align: center; padding: 2rem;">
+                        <h4 style="color: var(--primary); font-size: 0.9rem; text-transform: uppercase;">Usuarios Totales</h4>
+                        <p id="total_users" style="font-size: 2.5rem; font-weight: bold; color: #fff; margin: 0.5rem 0;">0</p>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 2rem;">
+                        <h4 style="color: #fbbf24; font-size: 0.9rem; text-transform: uppercase;">Registros Manuales</h4>
+                        <p id="total_emotions" style="font-size: 2.5rem; font-weight: bold; color: #fff; margin: 0.5rem 0;">0</p>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 2rem;">
+                        <h4 style="color: var(--error); font-size: 0.9rem; text-transform: uppercase;">Reconocimientos</h4>
+                        <p id="total_recognitions" style="font-size: 2.5rem; font-weight: bold; color: #fff; margin: 0.5rem 0;">0</p>
+                    </div>
+                    <div class="card" style="text-align: center; padding: 2rem;">
+                        <h4 style="color: #a78bfa; font-size: 0.9rem; text-transform: uppercase;">Encuestas MBI-SS</h4>
+                        <p id="total_surveys" style="font-size: 2.5rem; font-weight: bold; color: #fff; margin: 0.5rem 0;">0</p>
+                    </div>
+                </div>
+
+                <div class="summary-tables" style="display: grid; grid-template-columns: 1fr; gap: 2.5rem;">
+                    <!-- Roles Table -->
+                    <div class="card" style="padding: 2rem;">
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Roles</h2>
+                        <table id="table-roles" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                    <th style="padding: 1rem; color: var(--primary);">Rol</th>
+                                    <th style="padding: 1rem; color: var(--primary); text-align: right;">Cantidad de Usuarios</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Programs Table -->
+                    <div class="card" style="padding: 2rem;">
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Programas Académicos</h2>
+                        <table id="table-programs" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                    <th style="padding: 1rem; color: var(--primary);">Programa</th>
+                                    <th style="padding: 1rem; color: var(--primary); text-align: right;">Cantidad de Usuarios</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Faculties Table -->
+                    <div class="card" style="padding: 2rem;">
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Facultades</h2>
+                        <table id="table-faculties" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                    <th style="padding: 1rem; color: var(--primary);">Facultad</th>
+                                    <th style="padding: 1rem; color: var(--primary); text-align: right;">Cantidad de Usuarios</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem; text-align: center;">
+                    <button id="back-to-reports-landing" class="link-btn">← Volver a opciones de reportes</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('back-to-reports-landing').addEventListener('click', () => this.renderLanding(appContainer, app));
+        document.getElementById('btn-download-pdf').addEventListener('click', () => this.downloadPDF());
+
+        await this.loadGeneralReport();
+    },
+
+    async loadGeneralReport() {
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch('/api/reports/summary/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (!response.ok) throw new Error('Error al cargar reporte general');
+            const data = await response.json();
+
+            // Fill Totals
+            document.getElementById('total_users').textContent = data.totals.users;
+            document.getElementById('total_emotions').textContent = data.totals.emotions;
+            document.getElementById('total_recognitions').textContent = data.totals.recognitions;
+            document.getElementById('total_surveys').textContent = data.totals.surveys;
+
+            // Fill Tables
+            this.fillTable('table-roles', data.by_role);
+            this.fillTable('table-programs', data.by_program);
+            this.fillTable('table-faculties', data.by_faculty);
+
+        } catch (err) {
+            console.error(err);
+        }
+    },
+
+    fillTable(tableId, rows) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        if (!tbody) return;
+        tbody.innerHTML = rows.map(row => `
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 1rem; color: #e2e8f0;">${row.name}</td>
+                <td style="padding: 1rem; color: #fff; text-align: right; font-weight: 600;">${row.count}</td>
+            </tr>
+        `).join('');
+    },
+
+    downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const user = window.Auth.getUser();
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(40);
+        doc.text("AURA - Reporte General Académico", 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generado por: ${user ? (user.first_name || user.username) : 'Administrador'}`, 14, 30);
+        doc.text(`Fecha: ${dateStr}`, 14, 36);
+        
+        // Horizontal Line
+        doc.setLineWidth(0.5);
+        doc.line(14, 40, 196, 40);
+
+        // Totals Data for PDF
+        const totals = [
+            ["Usuarios Totales", document.getElementById('total_users').textContent],
+            ["Registros Manuales", document.getElementById('total_emotions').textContent],
+            ["Reconocimientos Faciales", document.getElementById('total_recognitions').textContent],
+            ["Encuestas MBI-SS", document.getElementById('total_surveys').textContent]
+        ];
+
+        doc.autoTable({
+            startY: 45,
+            head: [['Métrica de Plataforma', 'Total']],
+            body: totals,
+            theme: 'striped',
+            headStyles: { fillColor: [110, 206, 210] }
+        });
+
+        // Roles Table
+        doc.setFontSize(14);
+        doc.text("Resumen por Roles", 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            html: '#table-roles',
+            startY: doc.lastAutoTable.finalY + 20,
+            headStyles: { fillColor: [110, 206, 210] }
+        });
+
+        // Programs Table
+        doc.setFontSize(14);
+        doc.text("Resumen por Programas Académicos", 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            html: '#table-programs',
+            startY: doc.lastAutoTable.finalY + 20,
+            headStyles: { fillColor: [110, 206, 210] }
+        });
+
+        // Check for new page if needed
+        if (doc.lastAutoTable.finalY + 40 > 280) doc.addPage();
+
+        // Faculties Table
+        doc.setFontSize(14);
+        doc.text("Resumen por Facultades", 14, doc.lastAutoTable.finalY + 15);
+        doc.autoTable({
+            html: '#table-faculties',
+            startY: doc.lastAutoTable.finalY + 20,
+            headStyles: { fillColor: [110, 206, 210] }
+        });
+
+        doc.save('reporte_general_plataforma.pdf');
     },
 
     renderBarChart(dataObj, selector, name, color) {
