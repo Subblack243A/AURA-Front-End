@@ -218,8 +218,30 @@
 }
 
 .emotion-card .emotion-icon {
-  font-size: 3rem;
-  transition: transform 0.3s;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.emotion-card .emotion-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--text-muted);
+  transition: all 0.3s;
+}
+
+.emotion-card:hover .emotion-icon {
+  transform: scale(1.1);
+  color: var(--primary);
+}
+
+.emotion-card:hover .emotion-icon svg {
+  stroke: var(--primary);
+  filter: drop-shadow(0 0 8px rgba(110, 206, 210, 0.3));
 }
 
 .emotion-card:hover .emotion-name {
@@ -330,14 +352,27 @@
 .survey-question-card.error-state {
   border-color: var(--error);
   background: rgba(248, 113, 113, 0.05);
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 
 .question-text {
@@ -498,3 +533,166 @@
     gap: 0.75rem;
   }
 }
+
+/* Profile View Styles */
+.profile-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 2rem;
+  padding: 3rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-avatar {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, var(--primary) 0%, #2d3544 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  border: 4px solid rgba(110, 206, 210, 0.2);
+}
+
+.profile-title-info h2 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  color: white;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 1rem;
+  background: rgba(110, 206, 210, 0.1);
+  color: var(--primary);
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(110, 206, 210, 0.2);
+  margin: 0;
+}
+
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.info-item label, .form-group label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item p {
+  font-size: 1.15rem;
+  color: white;
+  font-weight: 500;
+  margin: 0;
+}
+
+.static-value {
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  margin: 0;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.profile-actions .btn-primary,
+.profile-actions .btn-secondary {
+  width: auto;
+  min-width: 150px;
+  padding: 0.75rem 2rem;
+}
+
+/* OTP in Profile */
+.otp-verification-container {
+  text-align: center;
+  padding: 1rem;
+}
+
+.otp-verification-container h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: white;
+}
+
+.otp-input {
+  max-width: 250px;
+  margin: 1.5rem auto !important;
+  text-align: center;
+  font-size: 2rem;
+  letter-spacing: 0.5rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--primary) !important;
+  border: 2px solid var(--primary) !important;
+  height: auto !important;
+}
+
+/* Toast Notifications */
+.profile-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #10b981; /* Emerald 500 */
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  .profile-card {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  .profile-info-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+

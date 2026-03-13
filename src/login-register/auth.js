@@ -100,6 +100,39 @@ const Auth = {
         return data;
     },
 
+    async requestPasswordResetOTP(email) {
+        const response = await fetch(`${API_URL}/password-recovery/request/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || data.email || 'Error al solicitar recuperación');
+        return data;
+    },
+
+    async verifyPasswordResetOTP(email, otp_code) {
+        const response = await fetch(`${API_URL}/password-recovery/verify/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp_code }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Código inválido');
+        return data;
+    },
+
+    async resetPassword(email, otp_code, password, confirm_password) {
+        const response = await fetch(`${API_URL}/password-recovery/reset/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp_code, password, confirm_password }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || data.password || 'Error al restablecer contraseña');
+        return data;
+    },
+
     logout() {
         localStorage.removeItem('aura_token');
         localStorage.removeItem('aura_user');

@@ -12,13 +12,30 @@ const App = {
     },
 
 
-    renderInitialView() {
+    async renderInitialView() {
         if (window.Auth.isAuthenticated()) {
-            this.renderDashboard();
+            await this.checkEmotionAndRender();
         } else {
             // Start with camera permission request
             this.renderCameraPermission();
         }
+    },
+
+    async checkEmotionAndRender() {
+        // Only apply the 24h check for students
+        if (window.Auth.getRole() === 'Estudiante' && window.EmotionViews) {
+            try {
+                const needsRegistration = await window.EmotionViews.checkNeedsEmotionRegistration();
+                if (needsRegistration) {
+                    console.log('24h emotion check: registration required before dashboard.');
+                    await window.EmotionViews.renderMandatoryRegister(this.appContainer, this);
+                    return;
+                }
+            } catch (err) {
+                console.error('Emotion check failed, proceeding to dashboard:', err);
+            }
+        }
+        this.renderDashboard(true);
     },
 
     setLoading(isLoading) {
@@ -78,6 +95,12 @@ const App = {
         }
     },
 
+    renderForgotEmail() {
+        if (window.UserViews) {
+            window.UserViews.renderForgotEmail(this);
+        }
+    },
+
     renderFaceVerification(email, password) {
         if (window.UserViews) {
             window.UserViews.renderFaceVerification(this, email, password);
@@ -114,9 +137,30 @@ const App = {
         }
     },
 
-    renderDashboard() {
+    renderProfile() {
+        if (window.ProfileView) {
+            window.ProfileView.render(this.appContainer, this);
+        }
+    },
+
+    async renderDashboard(skipCheck = false) {
         const user = window.Auth.getUser();
         const role = window.Auth.getRole();
+
+        // Intercept for student 24h emotion check (don't check when already coming from checkEmotionAndRender)
+        if (!skipCheck && role === 'Estudiante' && window.EmotionViews) {
+            try {
+                const needsRegistration = await window.EmotionViews.checkNeedsEmotionRegistration();
+                if (needsRegistration) {
+                    console.log('24h emotion check: registration required before dashboard.');
+                    await window.EmotionViews.renderMandatoryRegister(this.appContainer, this);
+                    return;
+                }
+            } catch (err) {
+                console.error('Emotion check failed, proceeding to dashboard:', err);
+            }
+        }
+
 
         if (role === 'Estudiante') {
             if (window.StudentDashboard) {

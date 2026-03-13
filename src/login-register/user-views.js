@@ -49,6 +49,9 @@ const UserViews = {
                     </div>
                     <button type="submit" data-original-text="Siguiente">Siguiente</button>
                 </form>
+                <div style="text-align: right; margin-top: 0.5rem;">
+                    <button class="link-btn" id="forgot-password-link" style="font-size: 0.85rem; padding: 0;">¿Olvidaste tu contraseña?</button>
+                </div>
                 <button class="link-btn" id="go-to-register">¿No tienes cuenta? Regístrate</button>
             </div>
         `;
@@ -98,8 +101,135 @@ const UserViews = {
                 app.setLoading(false);
             }
         });
+        
+        document.getElementById('forgot-password-link').addEventListener('click', () => {
+            if (app.renderForgotEmail) app.renderForgotEmail();
+            else UserViews.renderForgotEmail(app);
+        });
 
         document.getElementById('go-to-register').addEventListener('click', () => app.renderRegister());
+    },
+
+    renderForgotEmail(app) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Recuperar Contraseña</h1>
+                <p class="subtitle">Ingresa tu correo institucional para recibir un código de recuperación.</p>
+                <div class="error-message"></div>
+                <form id="forgot-email-form">
+                    <div class="form-group">
+                        <label for="recovery-email">Correo Electrónico</label>
+                        <input type="email" id="recovery-email" required placeholder="ejemplo@ucundinamarca.edu.co">
+                    </div>
+                    <button type="submit" data-original-text="Enviar Código">Enviar Código</button>
+                </form>
+                <button class="link-btn" id="back-to-login">Volver al Inicio de Sesión</button>
+            </div>
+        `;
+
+        document.getElementById('forgot-email-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('recovery-email').value;
+            app.setLoading(true);
+            try {
+                await window.Auth.requestPasswordResetOTP(email);
+                UserViews.renderRecoveryOTP(app, email);
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('back-to-login').addEventListener('click', () => app.renderLogin());
+    },
+
+    renderRecoveryOTP(app, email) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Verificación</h1>
+                <p class="subtitle">Hemos enviado un código a <strong>${email}</strong>. Ingrésalo para continuar.</p>
+                <div class="error-message"></div>
+                <form id="recovery-otp-form">
+                    <div class="form-group">
+                        <label for="recovery-otp">Código de 6 dígitos</label>
+                        <input type="text" id="recovery-otp" required 
+                               placeholder="123456" 
+                               maxlength="6" 
+                               style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem;">
+                    </div>
+                    <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
+                </form>
+                <button class="link-btn" id="resend-recovery-otp">Reenviar Código</button>
+                <button class="link-btn" id="back-to-email">Cambiar Correo</button>
+            </div>
+        `;
+
+        document.getElementById('recovery-otp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp_code = document.getElementById('recovery-otp').value;
+            app.setLoading(true);
+            try {
+                await window.Auth.verifyPasswordResetOTP(email, otp_code);
+                UserViews.renderResetPassword(app, email, otp_code);
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('resend-recovery-otp').addEventListener('click', async () => {
+            app.setLoading(true);
+            try {
+                await window.Auth.requestPasswordResetOTP(email);
+                alert('Nuevo código enviado.');
+            } catch (err) {
+                app.showError(err.message);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
+        document.getElementById('back-to-email').addEventListener('click', () => UserViews.renderForgotEmail(app));
+    },
+
+    renderResetPassword(app, email, otp_code) {
+        app.appContainer.innerHTML = `
+            <div class="card">
+                <h1>Nueva Contraseña</h1>
+                <p class="subtitle">Establece tu nueva contraseña para acceder a Aura.</p>
+                <div class="error-message"></div>
+                <form id="reset-password-form">
+                    <div class="form-group">
+                        <label for="new-password">Nueva Contraseña</label>
+                        <input type="password" id="new-password" required placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password">Confirmar Contraseña</label>
+                        <input type="password" id="confirm-new-password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" data-original-text="Actualizar Contraseña">Actualizar Contraseña</button>
+                </form>
+            </div>
+        `;
+
+        document.getElementById('reset-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('new-password').value;
+            const confirm_password = document.getElementById('confirm-new-password').value;
+
+            app.setLoading(true);
+            try {
+                await window.Auth.resetPassword(email, otp_code, password, confirm_password);
+                alert('Contraseña actualizada con éxito. Ahora puedes iniciar sesión.');
+                app.renderLogin();
+            } catch (err) {
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
     },
 
     renderFaceVerification(app, email, password) {
@@ -147,7 +277,7 @@ const UserViews = {
         });
     },
 
-    renderRegister(app) {
+    renderRegister(app, prefillData = null) {
         app.appContainer.innerHTML = `
             <div class="card">
                 <h1>Registro</h1>
@@ -265,7 +395,22 @@ const UserViews = {
             }
         });
 
-        loadPrograms();
+        loadPrograms().then(() => {
+            // Pre-fill form if data is provided (e.g. coming back from OTP correction)
+            if (prefillData) {
+                if (prefillData.username) document.getElementById('username').value = prefillData.username;
+                if (prefillData.email) document.getElementById('email').value = prefillData.email;
+                if (prefillData.first_name) document.getElementById('first_name').value = prefillData.first_name;
+                if (prefillData.last_name) document.getElementById('last_name').value = prefillData.last_name;
+                if (prefillData.DateOfBirth) document.getElementById('DateOfBirth').value = prefillData.DateOfBirth;
+                if (prefillData.Semester) document.getElementById('Semester').value = prefillData.Semester;
+                if (prefillData.FK_Program) {
+                    programSelect.value = prefillData.FK_Program;
+                    // Trigger faculty auto-fill
+                    programSelect.dispatchEvent(new Event('change'));
+                }
+            }
+        });
 
         // Password toggles for registration
         const setupPasswordToggle = (inputId, toggleId) => {
@@ -342,11 +487,23 @@ const UserViews = {
                 await window.Auth.register(userData);
                 console.log('Registration successful, redirecting to OTP');
                 
-                // Step 2: Show OTP Verification
-                UserViews.renderOTPVerification(app, userData.email, userData.password);
+                // Step 2: Show OTP Verification (pass full userData for possible correction)
+                UserViews.renderOTPVerification(app, userData);
             } catch (err) {
                 console.error('Registration failed:', err);
-                app.showError(err.message);
+                
+                // Check if it's the specific "user already exists" error
+                if (err.message && err.message.includes('USER_ALREADY_EXISTS')) {
+                    app.showError('Este usuario ya tiene una cuenta activa. Por favor, inicia sesión.', false);
+                } else if (err.message && (err.message.includes('email:') || err.message.includes('username:'))) {
+                    // Extract the message after the field name prefix
+                    const msg = err.message.includes('email:') ? 
+                        err.message.split('email: ')[1] : 
+                        err.message.split('username: ')[1];
+                    app.showError(msg.split('.')[0] || msg, false); // take first sentence/part
+                } else {
+                    app.showError(err.message);
+                }
             } finally {
                 app.setLoading(false);
             }
@@ -355,7 +512,12 @@ const UserViews = {
         document.getElementById('go-to-login').addEventListener('click', () => app.renderLogin());
     },
 
-    renderOTPVerification(app, email, password) {
+    renderOTPVerification(app, userData) {
+        // Support both legacy call (email, password) and new call (userData object)
+        const isLegacy = typeof userData === 'string';
+        const email = isLegacy ? userData : userData.email;
+        const password = isLegacy ? arguments[2] : userData.password;
+
         app.appContainer.innerHTML = `
             <div class="card">
                 <h1>Verificación de Correo</h1>
@@ -376,11 +538,15 @@ const UserViews = {
                 <div id="resend-container" style="text-align: center; margin-top: 1rem;">
                     <button id="resend-otp-btn" class="link-btn" disabled>Reenviar Código (120s)</button>
                 </div>
+                <hr style="border: none; border-top: 1px solid var(--border, #eee); margin: 1.5rem 0;">
+                <p class="subtitle" style="font-size: 0.9rem;">¿Pusiste el correo incorrecto u otros datos erróneos?</p>
+                <button class="link-btn" id="edit-registration-btn" style="color: var(--primary);">✏️ Corregir mis datos</button>
             </div>
         `;
 
         const form = document.getElementById('otp-form');
         const resendBtn = document.getElementById('resend-otp-btn');
+        const editBtn = document.getElementById('edit-registration-btn');
         let countdown = 120;
         let timerId = null;
 
@@ -415,6 +581,51 @@ const UserViews = {
                 app.setLoading(false);
             }
         });
+
+        editBtn.addEventListener('click', async () => {
+            const confirmed = confirm(
+                `¿Deseas volver al formulario de registro para corregir tus datos?\n\nSe cancelará el registro actual para "${email}".`
+            );
+            if (!confirmed) return;
+
+            app.setLoading(true);
+            try {
+                // Remove the unverified user so they can re-register cleanly
+                const apiBase = window.API_URL || '/api';
+                const response = await fetch(`${apiBase}/cancel-registration/`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || 'No se pudo cancelar el registro.');
+                }
+
+                console.log('Registration cancelled, returning to register form with prefilled data.');
+                if (timerId) clearInterval(timerId);
+
+                // Return to register form with data pre-filled (excluding password for security)
+                const prefill = isLegacy ? { email } : {
+                    username: userData.username,
+                    email: userData.email,
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    DateOfBirth: userData.DateOfBirth,
+                    Semester: userData.Semester,
+                    FK_Program: userData.FK_Program,
+                    FK_Faculty: userData.FK_Faculty,
+                };
+                UserViews.renderRegister(app, prefill);
+            } catch (err) {
+                console.error('Failed to cancel registration:', err);
+                app.showError(err.message, false);
+            } finally {
+                app.setLoading(false);
+            }
+        });
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             app.setLoading(true);
@@ -426,6 +637,7 @@ const UserViews = {
                 await window.Auth.verifyOTP(email, otpCode);
                 console.log('OTP verified, redirecting to Face Capture');
                 
+                if (timerId) clearInterval(timerId);
                 // Success: Move to mandatory face capture (Step 3)
                 UserViews.renderFaceCaptureForRegistration(app, email, password);
             } catch (err) {
