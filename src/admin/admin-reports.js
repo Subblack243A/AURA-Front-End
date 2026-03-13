@@ -32,9 +32,8 @@ const AdminReports = {
                 </div>
 
                 <div style="margin-top: 3rem; text-align: center;">
-                    <button id="back-to-dash-btn" class="link-btn">
-                        <svg style="vertical-align: middle; margin-right: 8px;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        Volver al Panel Principal
+                    <button id="back-to-dash-btn" class="secondary-btn" style="width: auto; padding: 0.75rem 2rem;">
+                        ← Volver al Panel Principal
                     </button>
                 </div>
             </div>
@@ -88,7 +87,7 @@ const AdminReports = {
                 </div>
 
                 <div style="margin-top: 3rem; text-align: center;" class="no-print">
-                    <button id="back-to-reports-landing" class="link-btn">← Volver a opciones de reportes</button>
+                    <button id="back-to-reports-landing" class="secondary-btn" style="width: auto; padding: 0.75rem 2rem;">← Volver a opciones de reportes</button>
                 </div>
             </div>
         `;
@@ -106,6 +105,7 @@ const AdminReports = {
 
         if (adminNameSpan) adminNameSpan.textContent = user ? (user.first_name ? `${user.first_name} ${user.last_name}` : user.username) : 'Administrador';
         
+
         if (printDateSpan) {
             const now = new Date();
             const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -175,7 +175,7 @@ const AdminReports = {
                 <div class="summary-tables" style="display: grid; grid-template-columns: 1fr; gap: 2.5rem;">
                     <!-- Roles Table -->
                     <div class="card" style="padding: 2rem;">
-                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Roles</h2>
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Usuarios por Roles</h2>
                         <table id="table-roles" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
@@ -189,7 +189,7 @@ const AdminReports = {
 
                     <!-- Programs Table -->
                     <div class="card" style="padding: 2rem;">
-                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Programas Académicos</h2>
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Usuarios por Programas Académicos</h2>
                         <table id="table-programs" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
@@ -203,7 +203,7 @@ const AdminReports = {
 
                     <!-- Faculties Table -->
                     <div class="card" style="padding: 2rem;">
-                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Desglose por Facultades</h2>
+                        <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Usuarios por Facultades</h2>
                         <table id="table-faculties" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
@@ -214,10 +214,55 @@ const AdminReports = {
                             <tbody></tbody>
                         </table>
                     </div>
+
+                    <!-- New Tables: Emotions and Surveys -->
+                    <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+                        <!-- Manual Emotions Table -->
+                        <div class="card" style="padding: 2rem;">
+                            <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: #fbbf24;">Resumen: Registros Manuales</h2>
+                            <table id="table-manual-emotions" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 0.75rem; color: var(--primary);">Emoción</th>
+                                        <th style="padding: 0.75rem; color: var(--primary); text-align: right;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Facial Emotions Table -->
+                        <div class="card" style="padding: 2rem;">
+                            <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: var(--error);">Resumen: Reconocimientos Faciales</h2>
+                            <table id="table-facial-emotions" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 0.75rem; color: var(--primary);">Emoción</th>
+                                        <th style="padding: 0.75rem; color: var(--primary); text-align: right;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Survey Stats Table -->
+                        <div class="card" style="padding: 2rem;">
+                            <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: #a78bfa;">Resumen: Encuestas MBI-SS</h2>
+                            <table id="table-survey-stats" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 0.75rem; color: var(--primary);">Resultado</th>
+                                        <th style="padding: 0.75rem; color: var(--primary); text-align: right;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="margin-top: 3rem; text-align: center;">
-                    <button id="back-to-reports-landing" class="link-btn">← Volver a opciones de reportes</button>
+                    <button id="back-to-reports-landing" class="secondary-btn" style="width: auto; padding: 0.75rem 2rem;">← Volver a opciones de reportes</button>
                 </div>
             </div>
         `;
@@ -247,6 +292,11 @@ const AdminReports = {
             this.fillTable('table-roles', data.by_role);
             this.fillTable('table-programs', data.by_program);
             this.fillTable('table-faculties', data.by_faculty);
+            
+            // Fill New Emotion/Survey Tables
+            this.fillTable('table-manual-emotions', data.manual_emotions);
+            this.fillTable('table-facial-emotions', data.facial_emotions);
+            this.fillTable('table-survey-stats', data.survey_results);
 
         } catch (err) {
             console.error(err);
@@ -281,11 +331,37 @@ const AdminReports = {
         doc.text(`Generado por: ${user ? (user.first_name || user.username) : 'Administrador'}`, 14, 30);
         doc.text(`Fecha: ${dateStr}`, 14, 36);
         
-        // Horizontal Line
         doc.setLineWidth(0.5);
         doc.line(14, 40, 196, 40);
 
-        // Totals Data for PDF
+        let currentY = 45;
+
+        // Helper to add a table section with title
+        const addSection = (title, tableId, color) => {
+            // Check if we need a new page for the title + some table header
+            if (currentY + 30 > 280) {
+                doc.addPage();
+                currentY = 20;
+            }
+
+            doc.setFontSize(14);
+            doc.setTextColor(40);
+            doc.text(title, 14, currentY);
+            
+            doc.autoTable({
+                html: tableId,
+                startY: currentY + 5,
+                headStyles: { fillColor: color },
+                margin: { left: 14, right: 14 },
+                didDrawPage: (data) => {
+                    currentY = data.cursor.y + 15;
+                }
+            });
+            
+            currentY = doc.lastAutoTable.finalY + 15;
+        };
+
+        // 1. Totals Table
         const totals = [
             ["Usuarios Totales", document.getElementById('total_users').textContent],
             ["Registros Manuales", document.getElementById('total_emotions').textContent],
@@ -294,42 +370,25 @@ const AdminReports = {
         ];
 
         doc.autoTable({
-            startY: 45,
+            startY: currentY,
             head: [['Métrica de Plataforma', 'Total']],
             body: totals,
             theme: 'striped',
-            headStyles: { fillColor: [110, 206, 210] }
+            headStyles: { fillColor: [110, 206, 210] },
+            margin: { left: 14, right: 14 }
         });
 
-        // Roles Table
-        doc.setFontSize(14);
-        doc.text("Resumen por Roles", 14, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({
-            html: '#table-roles',
-            startY: doc.lastAutoTable.finalY + 20,
-            headStyles: { fillColor: [110, 206, 210] }
-        });
+        currentY = doc.lastAutoTable.finalY + 15;
 
-        // Programs Table
-        doc.setFontSize(14);
-        doc.text("Resumen por Programas Académicos", 14, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({
-            html: '#table-programs',
-            startY: doc.lastAutoTable.finalY + 20,
-            headStyles: { fillColor: [110, 206, 210] }
-        });
+        // 2. Academic Tables
+        addSection("Usuarios por Roles", '#table-roles', [110, 206, 210]);
+        addSection("Usuarios por Programas Académicos", '#table-programs', [110, 206, 210]);
+        addSection("Usuarios por Facultades", '#table-faculties', [110, 206, 210]);
 
-        // Check for new page if needed
-        if (doc.lastAutoTable.finalY + 40 > 280) doc.addPage();
-
-        // Faculties Table
-        doc.setFontSize(14);
-        doc.text("Resumen por Facultades", 14, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({
-            html: '#table-faculties',
-            startY: doc.lastAutoTable.finalY + 20,
-            headStyles: { fillColor: [110, 206, 210] }
-        });
+        // 3. New Detailed Tables
+        addSection("Resumen de Registros Manuales", '#table-manual-emotions', [251, 191, 36]);
+        addSection("Resumen de Reconocimientos Faciales", '#table-facial-emotions', [248, 113, 113]);
+        addSection("Resumen de Encuestas MBI-SS", '#table-survey-stats', [167, 139, 250]);
 
         doc.save('reporte_general_plataforma.pdf');
     },

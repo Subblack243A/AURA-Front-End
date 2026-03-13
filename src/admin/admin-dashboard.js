@@ -35,12 +35,6 @@ const AdminDashboard = {
                         <button class="primary-btn" style="padding: 1rem 2rem; border-radius: 1rem; width: 100%; font-size: 1rem; letter-spacing: 0.5px;">Explorar Reportes</button>
                     </div>
                 </div>
-
-                <div style="margin-top: 3rem; text-align: center;">
-                    <button id="admin-logout-btn" class="link-btn" style="color: rgba(255,255,255,0.5); font-size: 1rem;">
-                        <svg style="vertical-align: middle; margin-right: 8px;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                        Cerrar Sesión Segura
-                    </button>
                 </div>
             </div>
 
@@ -63,20 +57,20 @@ const AdminDashboard = {
             </style>
         `;
 
-        // Event Listeners
-        document.getElementById('admin-users-card').addEventListener('click', () => {
-            alert('Módulo de Administración de Usuarios en desarrollo para Aura v1.0.');
-        });
+        const adminUsersCard = document.getElementById('admin-users-card');
+        const adminReportsCard = document.getElementById('admin-reports-card');
 
-        document.getElementById('admin-reports-card').addEventListener('click', () => {
-            app.renderAdminReports();
-        });
+        if (adminUsersCard) {
+            adminUsersCard.addEventListener('click', () => {
+                alert('Módulo de Administración de Usuarios en desarrollo para Aura v1.0.');
+            });
+        }
 
-        document.getElementById('admin-logout-btn').addEventListener('click', () => {
-            window.Auth.logout();
-            if (window.Navbar) window.Navbar.update();
-            app.renderLogin();
-        });
+        if (adminReportsCard) {
+            adminReportsCard.addEventListener('click', () => {
+                app.renderAdminReports();
+            });
+        }
     }
 };
 
