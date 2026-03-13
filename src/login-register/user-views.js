@@ -1,30 +1,58 @@
 const UserViews = {
-    renderCameraPermission(app) {
+    renderLandingPage(app) {
         app.appContainer.innerHTML = `
-            <div class="card">
-                <h1>Acceso a Cámara</h1>
-                <p class="subtitle">Para iniciar sesión, necesitamos usar tu cámara para el análisis de emociones y seguridad.</p>
-                <div class="camera-icon-preview" style="text-align: center; margin: 2rem 0;">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                        <circle cx="12" cy="13" r="4"></circle>
-                    </svg>
+            <div class="card landing-card" style="max-width: 600px; text-align: center; padding: 3rem 2rem;">
+                <div class="landing-header" style="margin-bottom: 2rem;">
+                    <img src="/assets/logo.png" alt="AURA Logo" style="width: 120px; height: auto; margin-bottom: 1.5rem; filter: drop-shadow(0 4px 12px rgba(110, 206, 210, 0.3));">
+                    <h1 style="font-size: 2.8rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        AURA
+                    </h1>
+                    <p style="font-size: 1.1rem; color: var(--primary); font-weight: 600; letter-spacing: 1px; text-transform: uppercase;">
+                        Inteligencia Emocional para tu Bienestar
+                    </p>
                 </div>
-                <button id="enable-camera-btn">Habilitar Cámara</button>
-                <button class="link-btn" id="go-to-login-anyway">Continuar al Login</button>
+
+                <div class="landing-description" style="margin-bottom: 2.5rem; text-align: left; line-height: 1.6; color: #fff;">
+                    <p style="margin-bottom: 1rem;">
+                        Bienvenido a <strong>AURA</strong>, la plataforma de vanguardia diseñada para acompañar y fortalecer tu salud mental académica. 
+                    </p>
+                    <p style="margin-bottom: 1.5rem; color: #94a3b8;">
+                        Mediante análisis avanzado de emociones y herramientas de seguimiento personalizado, AURA te ayuda a entender tu estado emocional, prevenir el agotamiento y potenciar tu rendimiento universitario de forma equilibrada.
+                    </p>
+                    
+                    <div style="display: flex; gap: 1rem; flex-direction: column;">
+                        <button id="landing-login-btn" class="primary-btn" style="padding: 1rem;">Iniciar Sesión</button>
+                        <button id="landing-register-btn" class="secondary-btn" style="padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">Crear una Cuenta</button>
+                    </div>
+                </div>
+
+                <div class="privacy-note" style="padding: 1.25rem; background: rgba(110, 206, 210, 0.05); border-radius: 12px; border: 1px solid rgba(110, 206, 210, 0.1); text-align: left;">
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; display: flex; gap: 12px; align-items: flex-start;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <span>
+                            <strong>Tu privacidad es nuestra prioridad:</strong> AURA no almacena imágenes de rostros en sus servidores. Las capturas se analizan localmente para generar datos segmentados y se eliminan inmediatamente después del procesamiento.
+                        </span>
+                    </p>
+                </div>
             </div>
+
+            <style>
+                .landing-card {
+                    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(30px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .secondary-btn:hover {
+                    background: rgba(255,255,255,0.1) !important;
+                    border-color: var(--primary) !important;
+                }
+            </style>
         `;
 
-        document.getElementById('enable-camera-btn').addEventListener('click', async () => {
-            const allowed = await window.CameraHandler.requestPermission();
-            if (allowed) {
-                app.renderLogin();
-            } else {
-                alert('No se pudo acceder a la cámara. Por favor, asegúrate de dar los permisos necesarios.');
-            }
-        });
-
-        document.getElementById('go-to-login-anyway').addEventListener('click', () => app.renderLogin());
+        document.getElementById('landing-login-btn').addEventListener('click', () => app.renderLogin());
+        document.getElementById('landing-register-btn').addEventListener('click', () => app.renderRegister());
     },
 
     renderLogin(app) {
@@ -93,6 +121,10 @@ const UserViews = {
                     app.renderFaceVerification(email, password);
                 } else if (err.code === 'EMAIL_NOT_VERIFIED') {
                     UserViews.renderOTPVerification(app, email, password);
+                } else if (err.code === 'ACCOUNT_DEACTIVATED') {
+                    UserViews.renderAccountDeactivated(app, err.admin_email || 'admin@aura.com');
+                } else if (err.code === 'ACCOUNT_PENDING') {
+                    UserViews.renderAccountPending(app);
                 } else {
                     app.showError(err.message, false);
                 }
@@ -107,6 +139,53 @@ const UserViews = {
         });
 
         document.getElementById('go-to-register').addEventListener('click', () => app.renderRegister());
+    },
+
+    renderAccountDeactivated(app, adminEmail) {
+        app.appContainer.innerHTML = `
+            <div class="card deactivation-card" style="text-align: center; padding: 3rem 2rem; max-width: 500px;">
+                <div class="icon-container" style="color: #ef4444; margin-bottom: 1.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                </div>
+                <h1 style="color: #fff; margin-bottom: 1rem;">Cuenta Desactivada</h1>
+                <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 2rem;">
+                    Esta cuenta ha sido desactivada por un administrador. Si crees que esto es un error o deseas solicitar su reactivación, por favor contacta al administrador.
+                </p>
+                
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <p style="color: #fca5a5; font-size: 0.8rem; margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px;">Contacto Administrador</p>
+                    <a href="mailto:${adminEmail}" style="color: var(--primary); font-size: 1.1rem; text-decoration: none; font-weight: 600; word-break: break-all;">${adminEmail}</a>
+                </div>
+
+                <button class="secondary-btn" id="back-to-landing-from-deactivated">Volver al Inicio</button>
+            </div>
+        `;
+        
+        document.getElementById('back-to-landing-from-deactivated').addEventListener('click', () => app.renderLandingPage());
+    },
+
+    renderAccountPending(app) {
+        app.appContainer.innerHTML = `
+            <div class="card pending-card" style="text-align: center; padding: 3rem 2rem; max-width: 500px;">
+                <div class="icon-container" style="color: #fbbf24; margin-bottom: 1.5rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <h1 style="color: #fff; margin-bottom: 1rem;">Cuenta en Revisión</h1>
+                <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 2rem;">
+                    Su estado actual es <strong>pendiente</strong>. Un administrador está revisando su solicitud de acceso.
+                </p>
+                
+                <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <p style="color: #fbbf24; font-size: 0.95rem; margin: 0; font-weight: 500;">
+                        Se le notificará al correo electrónico cuando su cuenta sea activada. 😊
+                    </p>
+                </div>
+
+                <button class="secondary-btn" id="pending-back-btn">Volver al Inicio</button>
+            </div>
+        `;
+        
+        document.getElementById('pending-back-btn').addEventListener('click', () => app.renderLandingPage());
     },
 
     renderForgotEmail(app) {

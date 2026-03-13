@@ -62,7 +62,7 @@ const AdminDashboard = {
 
         if (adminUsersCard) {
             adminUsersCard.addEventListener('click', () => {
-                alert('Módulo de Administración de Usuarios en desarrollo para Aura v1.0.');
+                window.AdminUsers.render(appContainer, app);
             });
         }
 
