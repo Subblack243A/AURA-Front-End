@@ -16,8 +16,8 @@ const App = {
         if (window.Auth.isAuthenticated()) {
             await this.checkEmotionAndRender();
         } else {
-            // Start with camera permission request
-            this.renderCameraPermission();
+            // Start with Landing Page
+            this.renderLandingPage();
         }
     },
 
@@ -40,7 +40,7 @@ const App = {
 
     setLoading(isLoading) {
         // Find all interactive buttons in the current view that should be disabled
-        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #enable-camera-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
+        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #landing-login-btn, #landing-register-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
         
         buttons.forEach(btn => {
             btn.disabled = isLoading;
@@ -83,9 +83,9 @@ const App = {
         }
     },
 
-    renderCameraPermission() {
+    renderLandingPage() {
         if (window.UserViews) {
-            window.UserViews.renderCameraPermission(this);
+            window.UserViews.renderLandingPage(this);
         }
     },
 
@@ -143,6 +143,30 @@ const App = {
         }
     },
 
+    renderAdminReports() {
+        if (window.AdminReports) {
+            window.AdminReports.renderLanding(this.appContainer, this);
+        }
+    },
+
+    renderAdminCharts() {
+        if (window.AdminReports) {
+            window.AdminReports.renderCharts(this.appContainer, this);
+        }
+    },
+
+    renderAdminUsers() {
+        if (window.AdminUsers) {
+            window.AdminUsers.render(this.appContainer, this);
+        }
+    },
+
+    renderAdminDashboard() {
+        if (window.AdminDashboard) {
+            window.AdminDashboard.render(this.appContainer, this);
+        }
+    },
+
     async renderDashboard(skipCheck = false) {
         const user = window.Auth.getUser();
         const role = window.Auth.getRole();
@@ -168,6 +192,8 @@ const App = {
             } else {
                 this.appContainer.innerHTML = `<p>Error: Student Dashboard not loaded.</p>`;
             }
+        } else if (role === 'Administrador' && window.AdminDashboard) {
+            window.AdminDashboard.render(this.appContainer, this);
         } else {
             // Default or other role dashboards
             this.appContainer.innerHTML = `
