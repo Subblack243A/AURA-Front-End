@@ -18,9 +18,9 @@ const Navbar = {
                 let badgeClass = 'role-badge-default';
                 if (role === 'Administrador') badgeClass = 'role-badge-admin';
                 else if (role === 'Estudiante') badgeClass = 'role-badge-student';
-                else if (role === 'Prof. de Salud') badgeClass = 'role-badge-health';
+                else if (role.toLowerCase() === 'profesional de la salud' || role.toLowerCase() === 'prof. de salud') badgeClass = 'role-badge-health';
 
-                roleIndicator.innerHTML = `<span class="role-badge ${badgeClass}">${role}</span>`;
+                roleIndicator.innerHTML = `<span class="role-badge ${badgeClass}">${window.Auth.formatRole(role)}</span>`;
                 roleIndicator.style.display = 'block';
             }
 
