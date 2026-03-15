@@ -40,13 +40,16 @@ const App = {
 
     setLoading(isLoading) {
         // Find all interactive buttons in the current view that should be disabled
-        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #landing-login-btn, #landing-register-btn, #landing-health-pro-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
+        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #landing-login-btn, #landing-register-btn, #landing-health-pro-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login, #btn-edit-profile, #btn-verify-otp');
         
         buttons.forEach(btn => {
             btn.disabled = isLoading;
             
             // Only change text/spinner for the "primary" action buttons
-            if (btn.type === 'submit' || btn.id === 'verify-btn' || btn.id === 'capture-btn' || btn.id === 'confirm-register-btn') {
+            const isPrimaryAction = btn.type === 'submit' || 
+                                   ['verify-btn', 'capture-btn', 'confirm-register-btn', 'btn-edit-profile', 'btn-verify-otp'].includes(btn.id);
+
+            if (isPrimaryAction) {
                 if (isLoading) {
                     if (!btn.dataset.originalText) {
                         btn.dataset.originalText = btn.textContent;
