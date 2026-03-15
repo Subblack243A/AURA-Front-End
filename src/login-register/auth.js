@@ -58,6 +58,48 @@ const Auth = {
         return data;
     },
 
+    async registerHealthPro(userData) {
+        const response = await fetch(`${API_URL}/auth/register-health-pro/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            let errorMsg = 'Registration failed';
+            if (typeof data === 'object') {
+                errorMsg = Object.entries(data)
+                    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+                    .join('. ');
+            } else if (data.error) {
+                errorMsg = data.error;
+            }
+            throw new Error(errorMsg);
+        }
+
+        return data;
+    },
+
+    async verifyHealthPro(email, otpCode) {
+        const response = await fetch(`${API_URL}/auth/verify-health-pro/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, otp_code: otpCode }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Verification failed');
+        }
+
+        return data;
+    },
+
     async verifyOTP(email, otpCode) {
         const response = await fetch(`${API_URL}/verify-otp/`, {
             method: 'POST',
@@ -154,6 +196,14 @@ const Auth = {
     getRole() {
         const user = this.getUser();
         return user ? user.role : null;
+    },
+
+    formatRole(role) {
+        if (!role) return '';
+        if (role.toLowerCase() === 'profesional de la salud' || role.toLowerCase() === 'prof. de salud') {
+            return 'Pro. Salud';
+        }
+        return role;
     }
 };
 
