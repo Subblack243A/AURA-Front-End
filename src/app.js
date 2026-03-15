@@ -40,7 +40,7 @@ const App = {
 
     setLoading(isLoading) {
         // Find all interactive buttons in the current view that should be disabled
-        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #landing-login-btn, #landing-register-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
+        const buttons = this.appContainer.querySelectorAll('button[type="submit"], #verify-btn, #landing-login-btn, #landing-register-btn, #landing-health-pro-btn, #capture-btn, #confirm-register-btn, #retry-capture, #cancel-capture, #back-to-login');
         
         buttons.forEach(btn => {
             btn.disabled = isLoading;
@@ -194,6 +194,8 @@ const App = {
             }
         } else if (role === 'Administrador' && window.AdminDashboard) {
             window.AdminDashboard.render(this.appContainer, this);
+        } else if ((role === 'Profesional de la Salud' || role === 'Pro. Salud') && window.HealthProDashboard) {
+            window.HealthProDashboard.render(this.appContainer, this);
         } else {
             // Default or other role dashboards
             this.appContainer.innerHTML = `
@@ -201,7 +203,7 @@ const App = {
                     <h1>Panel de Control</h1>
                     <p class="subtitle">Hola, ${user.username}!</p>
                     <div class="user-badge" style="margin: 0 auto 1.5rem auto; display: flex; justify-content: center; width: fit-content;">
-                        ${role || 'Usuario'}
+                        ${window.Auth.formatRole(role) || 'Usuario'}
                     </div>
                     <p style="text-align: center; margin-bottom: 1.5rem;">Próximamente: Panel específico para tu rol.</p>
                     <button id="logout-btn" data-original-text="Cerrar Sesión">Cerrar Sesión</button>
