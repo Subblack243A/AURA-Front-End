@@ -43,6 +43,20 @@ El frontend de Aura ha sido desarrollado priorizando la velocidad, la ligereza y
 - **Portal de Descarga**: Acceso directo para que el estudiante gestione e instale su agente local.
 - **Diseño Adaptativo**: Interfaz optimizada tanto para escritorio como para dispositivos móviles.
 
+### 5. Panel de Administración (Admin Dashboard)
+
+- **Gestión de Usuarios**: Control total sobre registros de estudiantes, profesionales y otros administradores.
+- **Activación de Cuentas**: Sistema de aprobación para usuarios en estado "Pendiente" tras el registro inicial.
+- **Métricas Globales**: Visualización de estadísticas agregadas por facultad y programa académico.
+- **Auditoría**: Monitoreo de actividad del sistema y registros biométricos globales.
+
+### 6. Panel del Profesional de la Salud
+
+- **Seguimiento Individualizado**: Búsqueda y análisis detallado por estudiante.
+- **Historial Clínico Emocional**: Comparativa visual entre el estado de ánimo reportado manualmente y el detectado por la IA.
+- **Reportes de Burnout**: Acceso a los resultados del test MBI-SS con interpretación automática de dimensiones (Cansancio, Cinismo, Eficacia).
+- **Alertas de Bienestar**: Identificación temprana de estudiantes con tendencias emocionales negativas persistentes.
+
 ## 🛠️ Estructura del Proyecto
 
 - `/src/login-register/`: Lógica de autenticación, vistas de login, registro y captura facial.
