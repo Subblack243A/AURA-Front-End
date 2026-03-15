@@ -47,6 +47,7 @@ const HealthProDashboard = {
                             <tr style="background: #1e293b; border-bottom: 2px solid var(--primary);">
                                 <th style="padding: 1.25rem 1.5rem; color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.2px;">Estudiante</th>
                                 <th style="padding: 1.25rem 1.5rem; color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.2px;">Correo Institucional</th>
+                                <th style="padding: 1.25rem 1.5rem; color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.2px;">Edad</th>
                                 <th style="padding: 1.25rem 1.5rem; color: var(--primary); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1.2px;">Programa / Facultad</th>
                             </tr>
                         </thead>
@@ -61,6 +62,14 @@ const HealthProDashboard = {
                 </div>
             </div>
 
+            <div id="student-detail-modal" class="modal" style="display: none;">
+                <div class="modal-content" style="max-width: 600px; padding: 0; background: var(--secondary); border-radius: 24px; border: 1px solid var(--card-border); overflow: hidden;">
+                    <div id="student-modal-body">
+                        <!-- Detail content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
             <style>
                 #search-students:focus {
                     border-color: var(--primary);
@@ -70,12 +79,26 @@ const HealthProDashboard = {
                 .student-row {
                     border-bottom: 1px solid rgba(255,255,255,0.03);
                     transition: all 0.2s ease;
+                    cursor: pointer;
                 }
                 .student-row:hover {
                     background: #1e293b;
                 }
                 .student-row:last-child {
                     border-bottom: none;
+                }
+                .info-card {
+                    background: rgba(15, 23, 42, 0.6);
+                    padding: 1rem;
+                    border-radius: 12px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .stat-box {
+                    text-align: center;
+                    padding: 1rem;
+                    background: rgba(110, 206, 210, 0.1);
+                    border-radius: 16px;
+                    border: 1px solid rgba(110, 206, 210, 0.2);
                 }
             </style>
         `;
@@ -127,7 +150,7 @@ const HealthProDashboard = {
 
         emptyMsg.style.display = 'none';
         tbody.innerHTML = students.map(student => `
-            <tr class="student-row">
+            <tr class="student-row" onclick="HealthProDashboard.showStudentDetail(${student.id})">
                 <td style="padding: 1.25rem 1.5rem;">
                     <div style="font-weight: 600; color: #fff;">${student.first_name} ${student.last_name}</div>
                 </td>
@@ -135,11 +158,101 @@ const HealthProDashboard = {
                     <div style="color: #94a3b8; font-size: 0.9rem;">${student.email}</div>
                 </td>
                 <td style="padding: 1.25rem 1.5rem;">
+                    <div style="color: #fff; font-size: 0.9rem;">${student.age || 'N/A'} años</div>
+                </td>
+                <td style="padding: 1.25rem 1.5rem;">
                     <div style="color: #fff; font-size: 0.85rem; margin-bottom: 0.25rem;">${student.program || 'N/A'}</div>
                     <div style="color: var(--primary); font-size: 0.75rem; opacity: 0.8;">${student.faculty || ''}</div>
                 </td>
             </tr>
         `).join('');
+    },
+
+    async showStudentDetail(studentId) {
+        const modal = document.getElementById('student-detail-modal');
+        const body = document.getElementById('student-modal-body');
+        if (!modal || !body) return;
+
+        modal.style.display = 'flex';
+        body.innerHTML = `
+            <div style="padding: 3rem; text-align: center;">
+                <div class="spinner"></div>
+                <p>Cargando perfil...</p>
+            </div>
+        `;
+
+        try {
+            const token = window.Auth.getToken();
+            const response = await fetch(`/api/admin/users/${studentId}/`, {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Error al cargar detalle');
+            const student = await response.json();
+
+            body.innerHTML = `
+                <div style="position: relative; padding: 2rem; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                    <button id="close-modal" style="position: absolute; right: 1.5rem; top: 1.5rem; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                    
+                    <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <div style="width: 80px; height: 80px; background: var(--primary); color: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem; box-shadow: 0 0 20px rgba(110, 206, 210, 0.3);">
+                            ${student.first_name[0]}${student.last_name[0]}
+                        </div>
+                        <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: #fff;">${student.first_name} ${student.last_name}</h2>
+                        <span class="user-badge" style="margin: 0 auto 1.5rem auto;">${student.role || 'Estudiante'}</span>
+                    </div>
+                </div>
+
+                <div style="padding: 2rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                        <div class="stat-box">
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">${student.emotions_count || 0}</div>
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-top: 5px;">Emociones</div>
+                        </div>
+                        <div class="stat-box">
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">${student.surveys_count || 0}</div>
+                            <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-top: 5px;">Encuestas</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; gap: 1rem;">
+                        <div class="info-card">
+                            <label style="margin-bottom: 4px; display: block; font-size: 0.75rem; color: var(--primary);">Correo Electrónico</label>
+                            <div style="color: #fff; font-size: 1rem;">${student.email}</div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="info-card">
+                                <label style="margin-bottom: 4px; display: block; font-size: 0.75rem; color: var(--primary);">Edad</label>
+                                <div style="color: #fff; font-size: 1rem;">${student.calculated_age || 'N/A'} años</div>
+                            </div>
+                            <div class="info-card">
+                                <label style="margin-bottom: 4px; display: block; font-size: 0.75rem; color: var(--primary);">Semestre</label>
+                                <div style="color: #fff; font-size: 1rem;">${student.Semester || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <label style="margin-bottom: 4px; display: block; font-size: 0.75rem; color: var(--primary);">Programa Académico</label>
+                            <div style="color: #fff; font-size: 1rem;">${student.program}</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; margin-top: 2px;">${student.faculty}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('close-modal').addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+        } catch (err) {
+            body.innerHTML = `
+                <div style="padding: 3rem; text-align: center;">
+                    <p style="color: var(--error);">Error al cargar el perfil del estudiante.</p>
+                    <button onclick="document.getElementById('student-detail-modal').style.display='none'" style="margin-top: 1rem;">Cerrar</button>
+                </div>
+            `;
+        }
     },
 
     setupEventListeners(appInstance) {
@@ -162,6 +275,14 @@ const HealthProDashboard = {
                 }, 300);
             });
         }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('student-detail-modal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
     }
 };
 
