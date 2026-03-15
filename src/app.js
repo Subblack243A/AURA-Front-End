@@ -142,6 +142,12 @@ const App = {
             window.ProfileView.render(this.appContainer, this);
         }
     },
+    
+    renderAgentPortal() {
+        if (window.StudentDashboard) {
+            window.StudentDashboard.renderAgentPortal(this.appContainer, this);
+        }
+    },
 
     renderAdminReports() {
         if (window.AdminReports) {

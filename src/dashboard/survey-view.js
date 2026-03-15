@@ -239,16 +239,17 @@ const SurveyView = {
             target.innerHTML = `
                 <div style="text-align: center; padding: 3rem;">
                     <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-                    <h2 style="color: white; margin-bottom: 1rem;">¡Gracias por tu participación!</h2>
-                    <p class="subtitle" style="margin-bottom: 2rem;">Tus respuestas han sido registradas correctamente.</p>
-                    <button class="btn-primary" id="close-survey-success" style="width: auto; padding: 0.75rem 2rem;">Continuar al Dashboard</button>
+                    <h2 style="color: white; margin-bottom: 1rem;">¡Encuesta completada con éxito!</h2>
+                    <p class="subtitle" style="margin-bottom: 2rem;">Tus respuestas han sido registradas. Redirigiéndote al portal de descarga del agente...</p>
+                    <div class="spinner" style="margin: 0 auto;"></div>
                 </div>
             `;
 
-            document.getElementById('close-survey-success').addEventListener('click', () => {
+            // Auto-redirect to agent portal after 2 seconds
+            setTimeout(() => {
                 if (!isStandalone) this.closeModal();
-                appInstance.renderDashboard();
-            });
+                appInstance.renderAgentPortal();
+            }, 2000);
 
         } catch (err) {
             console.error('Error submitting survey:', err);
