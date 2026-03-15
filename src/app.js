@@ -194,6 +194,8 @@ const App = {
             }
         } else if (role === 'Administrador' && window.AdminDashboard) {
             window.AdminDashboard.render(this.appContainer, this);
+        } else if ((role === 'Profesional de la Salud' || role === 'Pro. Salud') && window.HealthProDashboard) {
+            window.HealthProDashboard.render(this.appContainer, this);
         } else {
             // Default or other role dashboards
             this.appContainer.innerHTML = `
