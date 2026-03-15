@@ -292,6 +292,7 @@ const AdminUsers = {
     renderUserDetail(user) {
         const container = document.getElementById('admin-user-profile');
         const isPending = user.role.toLowerCase() === 'pendiente';
+        const isHealthPro = user.role.toLowerCase() === 'profesional de la salud' || user.role.toLowerCase() === 'prof. de salud';
 
         if (isPending) {
             container.innerHTML = `
@@ -326,6 +327,59 @@ const AdminUsers = {
                         <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                             <button id="btn-approve-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #22c55e; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.approveHCPro('${user.id}', this)">Aceptar Solicitud</button>
                             <button id="btn-reject-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.rejectHCPro('${user.id}', this)">Denegar Solicitud</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        if (isHealthPro) {
+            container.innerHTML = `
+                <div class="user-detail-view">
+                    <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
+                    
+                    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                        <div class="metric-card card" style="text-align: center; padding: 1.5rem; border-left: 4px solid #a78bfa;">
+                            <span style="font-size: 0.8rem; color: #a78bfa; font-weight: 600; text-transform: uppercase;">Estudiantes a cargo</span>
+                            <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.assigned_students_count || 0}</div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card card" style="padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                            <h2 style="margin: 0;">Perfil de Usuario</h2>
+                            <span class="role-badge role-badge-health">${window.Auth.formatRole(user.role)}</span>
+                        </div>
+
+                        <form id="edit-user-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div class="form-group">
+                                <label>Nombre(s)</label>
+                                <input type="text" id="edit-first-name" value="${user.first_name}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Apellidos</label>
+                                <input type="text" id="edit-last-name" value="${user.last_name}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Usuario</label>
+                                <input type="text" id="edit-username" value="${user.username}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Correo Electrónico</label>
+                                <input type="email" id="edit-email" value="${user.email}" disabled>
+                            </div>
+                            
+                            <!-- Hidden fields for compatibility with saveUserChanges script -->
+                            <input type="hidden" id="edit-semester" value="${user.Semester || 0}">
+                            <input type="hidden" id="edit-birth-date" value="${user.DateOfBirth || ''}">
+                            <input type="hidden" id="edit-role-id" value="${user.role_id}">
+                        </form>
+
+                        <div style="margin-top: 2.5rem; display: flex; gap: 1rem;">
+                            <button id="btn-edit-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="AdminUsers.enableUserEdit()">Editar Usuario</button>
+                            <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.id}')">Guardar Cambios</button>
+                            <button class="secondary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff;" onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">Desactivar Cuenta</button>
                         </div>
                     </div>
                 </div>
