@@ -840,3 +840,16 @@
     display: flex;
     justify-content: flex-end;
 }
+
+/* Dimension Cards Styles */
+.dimensions-container {
+    margin-bottom: 2rem;
+}
+
+.dimension-card {
+    transition: transform 0.2s;
+}
+
+.dimension-card:hover {
+    transform: translateY(-2px);
+}

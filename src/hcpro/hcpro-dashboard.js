@@ -489,7 +489,7 @@ const HealthProDashboard = {
                         <div class="dimension-card" style="background: rgba(110, 206, 210, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(110, 206, 210, 0.2);">
                             <div style="font-size: 0.8rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">Efectividad Académica</div>
                             <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin: 0.5rem 0;">${data.results.scores.academic_efficacy_score}</div>
-                            <div class="status-badge ${data.results.levels.ae_level === 'Bajo' ? 'burnout-no' : 'burnout-yes'}">${data.results.levels.ae_level}</div>
+                            <div class="status-badge ${data.results.levels.ae_level === 'Bajo' ? 'burnout-yes' : 'burnout-no'}">${data.results.levels.ae_level}</div>
                         </div>
                     </div>
 
