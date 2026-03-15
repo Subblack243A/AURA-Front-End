@@ -313,67 +313,86 @@
 /* Emotion Selection Grid */
 .emotion-selection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1rem;
   margin-top: 3rem;
+  width: 100%;
 }
 
 .emotion-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 1.5rem;
-  padding: 2rem;
+  border-radius: 1.25rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.emotion-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--emotion-color);
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
 }
 
 .emotion-card:hover {
   transform: translateY(-8px);
-  border-color: var(--primary);
-  box-shadow: 0 10px 20px rgba(110, 206, 210, 0.15);
-  background: rgba(110, 206, 210, 0.05);
+  border-color: var(--emotion-color);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px var(--emotion-color);
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.emotion-card .emotion-icon {
-  width: 4rem;
-  height: 4rem;
+.emotion-card:hover::before {
+  opacity: 1;
+}
+
+.emotion-icon {
+  width: 5rem;
+  height: 5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.emotion-card .emotion-icon svg {
+.emotion-icon svg {
   width: 100%;
   height: 100%;
-  stroke: var(--text-muted);
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 0 12px transparent);
 }
 
 .emotion-card:hover .emotion-icon {
-  transform: scale(1.1);
-  color: var(--primary);
+  transform: scale(1.15);
 }
 
 .emotion-card:hover .emotion-icon svg {
-  stroke: var(--primary);
-  filter: drop-shadow(0 0 8px rgba(110, 206, 210, 0.3));
-}
-
-.emotion-card:hover .emotion-name {
-  color: var(--primary);
+  filter: drop-shadow(0 0 15px var(--emotion-color));
 }
 
 .emotion-card .emotion-name {
-  font-weight: 600;
+  font-weight: 700;
   color: #ffffff;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+}
+
+.emotion-card:hover .emotion-name {
+  color: var(--emotion-color);
 }
 
 @media (max-width: 768px) {
