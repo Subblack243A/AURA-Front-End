@@ -82,6 +82,213 @@ const ProfileView = {
         `;
 
         document.getElementById('btn-edit-profile').addEventListener('click', () => this.requestOTP());
+        
+        // Render Survey History
+        const historyContainer = document.createElement('div');
+        historyContainer.id = 'survey-history-section';
+        historyContainer.className = 'profile-card';
+        historyContainer.style.marginTop = '2rem';
+        this.container.querySelector('.dashboard-container').appendChild(historyContainer);
+        
+        await this.renderSurveyHistory(user.id);
+    },
+
+    async renderSurveyHistory(userId) {
+        const historyContainer = document.getElementById('survey-history-section');
+        historyContainer.innerHTML = `
+            <div class="profile-header">
+                <div class="welcome-text">
+                    <h3 style="color: #fff; margin-bottom: 0.5rem; text-align: left;">Historial de Encuestas</h3>
+                    <p class="subtitle" style="text-align: left;">Resumen de tus evaluaciones de agotamiento académico.</p>
+                </div>
+            </div>
+            <div id="survey-list-container" style="margin-top: 1.5rem;">
+                <div class="spinner"></div>
+            </div>
+        `;
+
+        try {
+            const surveys = await this.fetchUserSurveys(userId);
+            const listContainer = document.getElementById('survey-list-container');
+            
+            if (!surveys || surveys.length === 0) {
+                listContainer.innerHTML = `<p style="color: #94a3b8; text-align: center; padding: 2rem;">No se encontraron encuestas registradas.</p>`;
+                return;
+            }
+
+            listContainer.innerHTML = `
+                <table class="survey-history-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Fecha</th>
+                            <th style="text-align: left;">Encuesta</th>
+                            <th style="text-align: left;">Resultado</th>
+                            <th style="text-align: left;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${surveys.map(s => `
+                            <tr>
+                                <td style="text-align: left;">${s.created_at}</td>
+                                <td style="text-align: left;">${s.survey_name}</td>
+                                <td style="text-align: left;">
+                                    <span class="status-badge ${s.has_burnout ? 'burnout-yes' : 'burnout-no'}">
+                                        ${s.has_burnout ? 'Con Agotamiento' : 'Sin Agotamiento'}
+                                    </span>
+                                </td>
+                                <td style="text-align: left;">
+                                    <button class="btn-detail-link" onclick="ProfileView.openSurveyDetail(${s.id})" style="justify-content: flex-start;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        Ver Detalle
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (err) {
+            console.error(err);
+            document.getElementById('survey-list-container').innerHTML = `<p style="color: #f87171;">Error al cargar el historial.</p>`;
+        }
+    },
+
+    async fetchUserSurveys(userId) {
+        const token = window.Auth.getToken();
+        const response = await fetch(`/api/reports/user/${userId}/surveys/`, {
+            headers: { 'Authorization': `Token ${token}` }
+        });
+        if (!response.ok) throw new Error('Error al cargar encuestas');
+        return await response.json();
+    },
+
+    async openSurveyDetail(surveyId) {
+        this.app.setLoading(true);
+        try {
+            const token = window.Auth.getToken();
+            const response = await fetch(`/api/surveys/${surveyId}/`, {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (!response.ok) throw new Error('Error al cargar detalle de la encuesta');
+            const data = await response.json();
+            
+            this.showDetailModal(data);
+        } catch (err) {
+            this.app.showError(err.message);
+        } finally {
+            this.app.setLoading(false);
+        }
+    },
+
+    showDetailModal(data) {
+        const questions = [
+            "Las actividades académicas me tienen emocionalmente agotado.",
+            "He perdido el interés en mis estudios desde que empecé la universidad/colegio.",
+            "Puedo resolver de manera eficaz los problemas relacionados con mis estudios.",
+            "Me encuentro agotado físicamente al final de un día en la universidad/colegio.",
+            "He perdido entusiasmo por los estudios.",
+            "Creo que contribuyo efectivamente con las clases a las que asisto.",
+            "Estoy exhausto de tanto estudiar.",
+            "En mi opinión, soy un buen estudiante.",
+            "He aprendido muchas cosas interesantes durante el curso de mis estudios.",
+            "Me siento cansado en la mañana cuando me levanto y tengo que afrontar otro día en la universidad/colegio.",
+            "Me he distanciado de mis estudios porque pienso que no serán realmente útiles.",
+            "Me estimula conseguir objetivos en mis estudios.",
+            "Estudiar o ir a clases todo el día es realmente estresante para mí.",
+            "Dudo de la importancia y el valor de mis estudios.",
+            "Durante las clases tengo la seguridad de que soy eficaz haciendo las cosas."
+        ];
+
+        const answerLabels = {
+            0: "Nunca",
+            1: "Casi nunca",
+            2: "A veces",
+            3: "Regularmente",
+            4: "Frecuentemente",
+            5: "Casi siempre",
+            6: "Siempre"
+        };
+
+        let modal = document.getElementById('survey-detail-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'survey-detail-modal';
+            modal.className = 'survey-modal-overlay';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="survey-modal-content detail-card">
+                <div class="survey-modal-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="color: var(--primary); margin-bottom: 0.25rem;">Detalle de Resultados</h2>
+                            <p class="subtitle" style="text-align: left;">Evaluado el: ${data.created_at}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="survey-detail-body">
+                    <!-- Dimensions Summary Section -->
+                    <div class="dimensions-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div class="dimension-card" style="background: rgba(110, 206, 210, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(110, 206, 210, 0.2);">
+                            <div style="font-size: 0.8rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">Agotamiento Emocional</div>
+                            <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin: 0.5rem 0;">${data.results.scores.emotional_exhaustion_score}</div>
+                            <div class="status-badge ${data.results.levels.ee_level === 'Alto' ? 'burnout-yes' : 'burnout-no'}">${data.results.levels.ee_level}</div>
+                        </div>
+                        <div class="dimension-card" style="background: rgba(110, 206, 210, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(110, 206, 210, 0.2);">
+                            <div style="font-size: 0.8rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">Cinismo</div>
+                            <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin: 0.5rem 0;">${data.results.scores.cynicism_score}</div>
+                            <div class="status-badge ${data.results.levels.c_level === 'Alto' ? 'burnout-yes' : 'burnout-no'}">${data.results.levels.c_level}</div>
+                        </div>
+                        <div class="dimension-card" style="background: rgba(110, 206, 210, 0.1); padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(110, 206, 210, 0.2);">
+                            <div style="font-size: 0.8rem; color: var(--primary); font-weight: 700; text-transform: uppercase;">Efectividad Académica</div>
+                            <div style="font-size: 1.5rem; color: #fff; font-weight: 800; margin: 0.5rem 0;">${data.results.scores.academic_efficacy_score}</div>
+                            <div class="status-badge ${data.results.levels.ae_level === 'Bajo' ? 'burnout-no' : 'burnout-yes'}">${data.results.levels.ae_level}</div>
+                        </div>
+                    </div>
+
+                    <!-- Scale Explanation -->
+                    <div class="scale-explanation" style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid var(--primary);">
+                        <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Sobre la escala MBI-SS</h4>
+                        <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">
+                            El Inventario de Burnout de Maslach (MBI-SS) evalúa tres dimensiones: 
+                            <strong>Agotamiento</strong> (cansancio por demandas académicas), 
+                            <strong>Cinismo</strong> (actitud distante hacia los estudios) y 
+                            <strong>Eficacia</strong> (percepción de logro). Se diagnostica agotamiento académico cuando los niveles de Agotamiento y Cinismo son <strong>Altos</strong> y la Eficacia es <strong>Baja</strong>.
+                        </p>
+                    </div>
+
+                    <h4 style="color: #fff; margin-bottom: 1.5rem; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">Respuestas Detalladas</h4>
+                    <ul class="question-detail-list">
+                        ${data.answers.map((ans, idx) => `
+                            <li>
+                                <div class="q-text">${idx + 1}. ${questions[idx]}</div>
+                                <div class="q-answer">${answerLabels[ans] || ans}</div>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+                <div class="survey-modal-footer">
+                    <button class="btn-secondary" onclick="ProfileView.closeDetailModal()">Cerrar</button>
+                </div>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Close on outside click
+        modal.onclick = (e) => {
+            if (e.target === modal) this.closeDetailModal();
+        };
+    },
+
+    closeDetailModal() {
+        const modal = document.getElementById('survey-detail-modal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
     },
 
     async requestOTP() {

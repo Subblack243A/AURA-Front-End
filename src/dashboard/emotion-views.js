@@ -21,12 +21,12 @@ const EmotionViews = {
 
                 <div class="charts-grid">
                     <div class="chart-card">
-                        <h3>Histórico: Registro Manual (Última Semana)</h3>
+                        <h3>Histórico: Registro Manual</h3>
                         <div id="manualTimelineChart"></div>
                     </div>
                     
                     <div class="chart-card">
-                        <h3>Histórico: Reconocimiento Automático (Última Semana)</h3>
+                        <h3>Histórico: Reconocimiento Automático</h3>
                         <div id="facialTimelineChart"></div>
                     </div>
                 </div>
