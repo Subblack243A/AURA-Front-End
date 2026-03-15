@@ -1,5 +1,7 @@
 const AdminUsers = {
     allUsers: [],
+    roles: [],
+    healthPros: [],
 
     async render(appContainer, app) {
         appContainer.innerHTML = `
@@ -168,6 +170,37 @@ const AdminUsers = {
         }
     },
 
+    async fetchRoles() {
+        if (this.roles.length > 0) return;
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch('/api/roles/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                this.roles = data.filter(r => ['Estudiante', 'Profesional de la Salud', 'Administrador'].includes(r.RoleType));
+            }
+        } catch (err) {
+            console.error('Error fetching roles:', err);
+        }
+    },
+
+    async fetchHealthPros() {
+        if (this.healthPros.length > 0) return;
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch('/api/admin/health-pros/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (response.ok) {
+                this.healthPros = await response.json();
+            }
+        } catch (err) {
+            console.error('Error fetching health pros:', err);
+        }
+    },
+
     renderUsers(users) {
         const tbody = document.getElementById('users-table-body');
         const pendingMsg = document.getElementById('pending-empty-msg');
@@ -281,6 +314,10 @@ const AdminUsers = {
             });
             if (!response.ok) throw new Error('No se pudo cargar el detalle del usuario.');
             const user = await response.json();
+            
+            // Prefetch roles and HP list before rendering
+            await Promise.all([this.fetchRoles(), this.fetchHealthPros()]);
+            
             this.renderUserDetail(user);
         } catch (err) {
             console.error(err);
@@ -291,119 +328,140 @@ const AdminUsers = {
 
     renderUserDetail(user) {
         const container = document.getElementById('admin-user-profile');
-        const isPending = user.role.toLowerCase() === 'pendiente';
-        const isHealthPro = user.role.toLowerCase() === 'profesional de la salud' || user.role.toLowerCase() === 'prof. de salud';
+        const role = user.role ? user.role.toLowerCase() : '';
+        const isPending = role === 'pendiente';
+        const isHealthPro = role === 'profesional de la salud' || role === 'prof. de salud';
+        const isAdmin = role === 'administrador' || role === 'administradora';
+        const isDeactivated = role === 'desactivado' || role === 'desactivada';
+
+        // Base template for the header and back button
+        let html = `
+            <div class="user-detail-view">
+                <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
+        `;
 
         if (isPending) {
-            container.innerHTML = `
-                <div class="user-detail-view">
-                    <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
-                    
-                    <div class="profile-card card" style="padding: 2rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
-                            <h2 style="margin: 0;">Perfil de Usuario</h2>
-                            <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
-                        </div>
+            html += `
+                <div class="profile-card card" style="padding: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                        <h2 style="margin: 0;">Perfil de Usuario</h2>
+                        <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
+                    </div>
 
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                            <div class="form-group">
-                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Nombre(s)</label>
-                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.first_name}</div>
-                            </div>
-                            <div class="form-group">
-                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Apellidos</label>
-                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.last_name}</div>
-                            </div>
-                            <div class="form-group">
-                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Correo Electrónico</label>
-                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.email}</div>
-                            </div>
-                            <div class="form-group">
-                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Usuario</label>
-                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.username}</div>
-                            </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <div class="form-group">
+                            <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Nombre(s)</label>
+                            <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.first_name}</div>
                         </div>
+                        <div class="form-group">
+                            <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Apellidos</label>
+                            <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.last_name}</div>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Correo Electrónico</label>
+                            <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.email}</div>
+                        </div>
+                        <div class="form-group">
+                            <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Usuario</label>
+                            <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.username}</div>
+                        </div>
+                    </div>
 
-                        <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <button id="btn-approve-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #22c55e; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.approveHCPro('${user.id}', this)">Aceptar Solicitud</button>
-                            <button id="btn-reject-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.rejectHCPro('${user.id}', this)">Denegar Solicitud</button>
-                        </div>
+                    <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button id="btn-approve-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #22c55e; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.approveHCPro('${user.id}', this)">Aceptar Solicitud</button>
+                        <button id="btn-reject-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.rejectHCPro('${user.id}', this)">Denegar Solicitud</button>
                     </div>
                 </div>
             `;
-            return;
-        }
+        } else if (isAdmin || isDeactivated) {
+            // Simplified view for Admins and Deactivated users
+            html += `
+                <div class="profile-card card" style="padding: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                        <h2 style="margin: 0;">Perfil de ${isAdmin ? 'Administrador' : 'Usuario'}</h2>
+                        <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
+                    </div>
 
-        if (isHealthPro) {
-            container.innerHTML = `
-                <div class="user-detail-view">
-                    <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
-                    
-                    <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                    <form id="edit-user-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                        <div class="form-group">
+                            <label>Nombre(s)</label>
+                            <input type="text" id="edit-first-name" value="${user.first_name}" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" id="edit-last-name" value="${user.last_name}" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <input type="email" id="edit-email" value="${user.email}" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <input type="text" id="edit-username" value="${user.username}" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Rol</label>
+                            <select id="edit-role-id" disabled style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(30,35,45,0.9); border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">
+                                ${this.roles.map(r => `
+                                    <option value="${r.ID_Role}" ${r.ID_Role === user.role_id ? 'selected' : ''}>${r.RoleType}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Profesional Asignado</label>
+                            <select id="edit-hp-id" disabled style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(30,35,45,0.9); border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">
+                                <option value="">Sin asignar</option>
+                                ${this.healthPros.map(hp => `
+                                    <option value="${hp.ID_User}" ${hp.ID_User === user.assigned_hp_id ? 'selected' : ''}>${hp.full_name}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <input type="hidden" id="edit-semester" value="0">
+                        <input type="hidden" id="edit-birth-date" value="">
+                    </form>
+
+                    <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button id="btn-edit-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="AdminUsers.enableUserEdit()">Editar Datos</button>
+                        <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.id}')">Guardar</button>
+                        
+                        <button id="btn-toggle-status" 
+                                class="${isDeactivated ? 'btn-approve' : 'secondary-btn'}" 
+                                style="width: auto; padding: 0.75rem 2rem; background: ${isDeactivated ? '#22c55e' : '#ef4444'}; border: none; color: #fff;" 
+                                onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">
+                            ${isDeactivated ? 'Reactivar Cuenta' : 'Desactivar Cuenta'}
+                        </button>
+
+                        ${isDeactivated ? `
+                            <button class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #7f1d1d; border: 1px solid #ef4444; color: #fff;" onclick="AdminUsers.deleteUserPermanently('${user.id}')">
+                                Eliminar de la Base de Datos
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            // Default view for Students and Health Pros (with metrics)
+            html += `
+                <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+                    ${isHealthPro ? `
                         <div class="metric-card card" style="text-align: center; padding: 1.5rem; border-left: 4px solid #a78bfa;">
                             <span style="font-size: 0.8rem; color: #a78bfa; font-weight: 600; text-transform: uppercase;">Estudiantes a cargo</span>
                             <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.assigned_students_count || 0}</div>
                         </div>
-                    </div>
-
-                    <div class="profile-card card" style="padding: 2rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
-                            <h2 style="margin: 0;">Perfil de Usuario</h2>
-                            <span class="role-badge role-badge-health">${window.Auth.formatRole(user.role)}</span>
+                    ` : `
+                        <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
+                            <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Reconocimientos</span>
+                            <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.recognitions_count}</div>
                         </div>
-
-                        <form id="edit-user-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-                            <div class="form-group">
-                                <label>Nombre(s)</label>
-                                <input type="text" id="edit-first-name" value="${user.first_name}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Apellidos</label>
-                                <input type="text" id="edit-last-name" value="${user.last_name}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Usuario</label>
-                                <input type="text" id="edit-username" value="${user.username}" disabled>
-                            </div>
-                            <div class="form-group">
-                                <label>Correo Electrónico</label>
-                                <input type="email" id="edit-email" value="${user.email}" disabled>
-                            </div>
-                            
-                            <!-- Hidden fields for compatibility with saveUserChanges script -->
-                            <input type="hidden" id="edit-semester" value="${user.Semester || 0}">
-                            <input type="hidden" id="edit-birth-date" value="${user.DateOfBirth || ''}">
-                            <input type="hidden" id="edit-role-id" value="${user.role_id}">
-                        </form>
-
-                        <div style="margin-top: 2.5rem; display: flex; gap: 1rem;">
-                            <button id="btn-edit-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="AdminUsers.enableUserEdit()">Editar Usuario</button>
-                            <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.id}')">Guardar Cambios</button>
-                            <button class="secondary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff;" onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">Desactivar Cuenta</button>
+                        <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
+                            <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Emociones</span>
+                            <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.emotions_count}</div>
                         </div>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = `
-            <div class="user-detail-view">
-                <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
-                
-                <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
-                    <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
-                        <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Reconocimientos</span>
-                        <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.recognitions_count}</div>
-                    </div>
-                    <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
-                        <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Emociones</span>
-                        <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.emotions_count}</div>
-                    </div>
-                    <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
-                        <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Encuestas</span>
-                        <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.surveys_count}</div>
-                    </div>
+                        <div class="metric-card card" style="text-align: center; padding: 1.5rem;">
+                            <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600; text-transform: uppercase;">Encuestas</span>
+                            <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem; color: #fff;">${user.surveys_count}</div>
+                        </div>
+                    `}
                 </div>
 
                 <div class="profile-card card" style="padding: 2rem;">
@@ -429,48 +487,49 @@ const AdminUsers = {
                             <label>Usuario</label>
                             <input type="text" id="edit-username" value="${user.username}" disabled>
                         </div>
+                        ${!isHealthPro ? `
                         <div class="form-group">
                             <label>Semestre</label>
-                            <input type="number" id="edit-semester" value="${user.Semester}" disabled>
+                            <input type="number" id="edit-semester" value="${user.Semester || 0}" disabled>
                         </div>
                         <div class="form-group">
                             <label>Fecha de Nacimiento</label>
-                            <input type="date" id="edit-birth-date" value="${user.DateOfBirth}" disabled>
+                            <input type="date" id="edit-birth-date" value="${user.DateOfBirth || ''}" disabled>
                         </div>
+                        ` : `
+                        <input type="hidden" id="edit-semester" value="${user.Semester || 0}">
+                        <input type="hidden" id="edit-birth-date" value="${user.DateOfBirth || ''}">
+                        `}
                         <div class="form-group">
-                            <label>Rol de Usuario</label>
-                            <select id="edit-role-id" 
-                                    style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(30,35,45,0.9); border: 2px solid rgba(110, 206, 210, 0.2); color: #fff; font-size: 1rem; outline: none;" 
-                                    disabled>
-                                <option value="2" ${user.role_id === 2 || user.role === 'Estudiante' ? 'selected' : ''}>Estudiante</option>
-                                <option value="3" ${user.role_id === 3 || user.role === 'Profesional de la Salud' ? 'selected' : ''}>Profesional de la Salud</option>
-                                <option value="4" ${user.role_id === 4 || user.role === 'Administrador' ? 'selected' : ''}>Administrador</option>
-                                <option value="1" ${user.role_id === 1 || user.role === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
-                                <option value="5" ${user.role_id === 5 || user.role === 'Desactivado' ? 'selected' : ''}>Desactivado</option>
+                            <label>Rol</label>
+                            <select id="edit-role-id" disabled style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(30,35,45,0.9); border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">
+                                ${this.roles.map(r => `
+                                    <option value="${r.ID_Role}" ${r.ID_Role === user.role_id ? 'selected' : ''}>${r.RoleType}</option>
+                                `).join('')}
                             </select>
                         </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                             <label>Programa / Facultad</label>
-                             <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); color: #94a3b8;">
-                                 ${user.program} — ${user.faculty}
-                             </div>
+                        <div class="form-group">
+                            <label>Profesional Asignado</label>
+                            <select id="edit-hp-id" disabled style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(30,35,45,0.9); border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">
+                                <option value="">Sin asignar</option>
+                                ${this.healthPros.map(hp => `
+                                    <option value="${hp.ID_User}" ${hp.ID_User === user.assigned_hp_id ? 'selected' : ''}>${hp.full_name}</option>
+                                `).join('')}
+                            </select>
                         </div>
                     </form>
 
                     <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button id="btn-edit-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="AdminUsers.enableUserEdit()">Editar Usuario</button>
                         <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.id}')">Guardar Cambios</button>
-                        
-                        <button id="btn-toggle-status" 
-                                class="${user.role === 'Desactivado' ? 'btn-approve' : 'secondary-btn'}" 
-                                style="width: auto; padding: 0.75rem 2rem; background: ${user.role === 'Desactivado' ? '#22c55e' : '#ef4444'}; border: none; color: #fff;" 
-                                onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">
-                            ${user.role === 'Desactivado' ? 'Reactivar Cuenta' : 'Desactivar Cuenta'}
-                        </button>
+                        <button class="secondary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff;" onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">Desactivar Cuenta</button>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
+
+        html += `</div>`;
+        container.innerHTML = html;
     },
 
     closeUserDetail() {
@@ -485,14 +544,15 @@ const AdminUsers = {
         const inputs = document.querySelectorAll('#edit-user-form input');
         inputs.forEach(input => input.disabled = false);
         
+        const selects = document.querySelectorAll('#edit-user-form select');
+        selects.forEach(select => select.disabled = false);
+
         document.getElementById('btn-edit-user').style.display = 'none';
         document.getElementById('btn-save-user').style.display = 'inline-block';
-        
-        // Show role dropdown (if not already enabled)
-        document.getElementById('edit-role-id').disabled = false;
     },
 
     async saveUserChanges(userId) {
+        const hpId = document.getElementById('edit-hp-id').value;
         const data = {
             first_name: document.getElementById('edit-first-name').value,
             last_name: document.getElementById('edit-last-name').value,
@@ -500,7 +560,8 @@ const AdminUsers = {
             username: document.getElementById('edit-username').value,
             Semester: parseInt(document.getElementById('edit-semester').value),
             DateOfBirth: document.getElementById('edit-birth-date').value,
-            role_id: parseInt(document.getElementById('edit-role-id').value)
+            role_id: parseInt(document.getElementById('edit-role-id').value),
+            assigned_hp_id: hpId ? parseInt(hpId) : null
         };
 
         const btn = document.getElementById('btn-save-user');
@@ -653,8 +714,9 @@ const AdminUsers = {
             }
 
             this.showNotification('Solicitud procesada: Profesional denegado y eliminado.', 'success');
-            this.closeUserDetail();
+            // Refresh
             await this.fetchUsers();
+            this.closeUserDetail();
         } catch (err) {
             console.error(err);
             this.showNotification(err.message, 'error');
@@ -663,9 +725,38 @@ const AdminUsers = {
         }
     },
 
+    async deleteUserPermanently(userId) {
+        if (!confirm('¿ESTÁS ABSOLUTAMENTE SEGURO? Esta acción ELIMINARÁ PERMANENTEMENTE todos los datos de este usuario de la base de datos y no se puede deshacer.')) return;
+        
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/`, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': `Token ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Error al eliminar usuario');
+            }
+
+            this.showNotification('Usuario eliminado permanentemente.', 'success');
+            
+            // Refresh underlying list
+            await this.fetchUsers();
+            this.closeUserDetail();
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+        }
+    },
+
     showNotification(message, type) {
-        // Simple alert for now, can be improved with a toast system
-        alert(message);
+        // Simple alert if no notification system is available
+        // In a real app, you'd use a toast or similar
+        alert(`${type.toUpperCase()}: ${message}`);
     }
 };
 
