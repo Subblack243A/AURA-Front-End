@@ -28,15 +28,25 @@ El frontend de Aura ha sido desarrollado priorizando la velocidad, la ligereza y
 - **Trigger Inteligente**: La encuesta se activa automáticamente cada 7 días para un seguimiento constante.
 - **Interfaz Fluida**: Diseño de encuesta moderno, sin distracciones numéricas y con validación en tiempo real.
 
-### 3. Panel de Control (Dashboard)
+### 3. Agente Biométrico Local (AURA Agent)
+
+- **Propósito**: Bypass de restricciones del navegador para el monitoreo continuo de emociones sin interrupciones por cambio de pestaña o minimización.
+- **Empaquetado Dinámico**: Descarga de un ejecutable `.zip` generado al vuelo que contiene las credenciales seguras del usuario (`config.json`).
+- **Ejecución Silenciosa**: Diseñado para correr en segundo plano en Windows, con control desde la bandeja del sistema (System Tray).
+- **Sistema de Heartbeat**: El agente envía señales de vida ("pings") periódicas para informar al panel si el monitoreo está activo en tiempo real.
+
+### 4. Panel de Control (Dashboard)
 
 - **Historial de Resultados**: Visualización de encuestas anteriores con diagnóstico automático de burnout.
-- **Estado en Tiempo Real**: Resumen del bienestar del estudiante.
+- **Visualización Emocional**: Gráficos interactivos (ApexCharts) que comparan registros manuales con detecciones faciales automáticas.
+- **Estado del Agente**: Indicador visual dinámico (Activo/Desconectado) basado en el último heartbeat recibido.
+- **Portal de Descarga**: Acceso directo para que el estudiante gestione e instale su agente local.
 - **Diseño Adaptativo**: Interfaz optimizada tanto para escritorio como para dispositivos móviles.
 
 ## 🛠️ Estructura del Proyecto
 
 - `/src/login-register/`: Lógica de autenticación, vistas de login, registro y captura facial.
-- `/src/dashboard/`: Componentes del panel principal y gestión de encuestas.
+- `/src/dashboard/`: Componentes del panel principal, gestión de encuestas y portal del agente.
 - `/src/schemas/`: Definiciones JSON para formularios dinámicos (MBI-SS).
 - `/src/styles.css`: Sistema de diseño global y tokens visuales.
+- `/src/app.js`: Orquestador principal de la aplicación y manejo de rutas.
