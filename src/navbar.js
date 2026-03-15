@@ -20,8 +20,24 @@ const Navbar = {
                 else if (role === 'Estudiante') badgeClass = 'role-badge-student';
                 else if (role.toLowerCase() === 'profesional de la salud' || role.toLowerCase() === 'prof. de salud') badgeClass = 'role-badge-health';
 
-                roleIndicator.innerHTML = `<span class="role-badge ${badgeClass}">${window.Auth.formatRole(role)}</span>`;
-                roleIndicator.style.display = 'block';
+                let agentStatusHtml = '';
+                if (role === 'Estudiante') {
+                    agentStatusHtml = `
+                    <div class="agent-status-badge" style="display: inline-flex; height: fit-content; align-items: center; justify-content: center; margin-left: 10px; background: rgba(255, 255, 255, 0.05); padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <div id="agent-status-dot" class="dot-red"></div>
+                        <span id="agent-status-text" style="color: white; margin-left: 5px;">Agente Desconectado</span>
+                    </div>`;
+                }
+
+                roleIndicator.style.display = 'flex';
+                roleIndicator.style.alignItems = 'center';
+                roleIndicator.innerHTML = `<span class="role-badge ${badgeClass}">${window.Auth.formatRole(role)}</span>${agentStatusHtml}`;
+
+                if (role === 'Estudiante') {
+                    this.startAgentStatusPolling();
+                } else {
+                    this.stopAgentStatusPolling();
+                }
             }
 
             navLinks.innerHTML = `
@@ -36,12 +52,76 @@ const Navbar = {
             if (roleIndicator) {
                 roleIndicator.innerHTML = '';
                 roleIndicator.style.display = 'none';
+                this.stopAgentStatusPolling();
             }
             navLinks.innerHTML = `
                 <a href="#" class="nav-link" id="nav-login">Iniciar Sesión</a>
                 <a href="#" class="nav-link" id="nav-register">Registrarse</a>
             `;
             this.addAuthLinkListeners();
+        }
+    },
+
+    checkAgentStatus(lastPingDateString) {
+        const dot = document.getElementById('agent-status-dot');
+        const text = document.getElementById('agent-status-text');
+        
+        if (!dot || !text) return;
+
+        if (!lastPingDateString) {
+            dot.className = 'dot-red';
+            text.textContent = 'Agente Desconectado';
+            return;
+        }
+
+        const lastPing = new Date(lastPingDateString);
+        const now = new Date();
+        const diffInMinutes = (now - lastPing) / (1000 * 60);
+
+        if (diffInMinutes < 2) {
+            dot.className = 'dot-green';
+            text.textContent = 'Agente Activo';
+        } else {
+            dot.className = 'dot-red';
+            text.textContent = 'Agente Desconectado';
+        }
+    },
+
+    startAgentStatusPolling() {
+        if (this.agentPollingInterval) {
+            clearInterval(this.agentPollingInterval);
+        }
+
+        const fetchProfile = async () => {
+            try {
+                if (!window.Auth.isAuthenticated()) {
+                    this.stopAgentStatusPolling();
+                    return;
+                }
+                const response = await fetch('/api/profile/', {
+                    headers: {
+                        'Authorization': `Token ${window.Auth.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    this.checkAgentStatus(data.last_agent_ping);
+                }
+            } catch (error) {
+                console.error("Error fetching agent status:", error);
+            }
+        };
+
+        // Fetch immediately and set interval for every 30 seconds
+        fetchProfile();
+        this.agentPollingInterval = setInterval(fetchProfile, 30000);
+    },
+
+    stopAgentStatusPolling() {
+        if (this.agentPollingInterval) {
+            clearInterval(this.agentPollingInterval);
+            this.agentPollingInterval = null;
         }
     },
 
