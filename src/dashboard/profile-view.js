@@ -47,7 +47,7 @@ const ProfileView = {
                         </div>
                         <div class="profile-title-info">
                             <h2>${user.first_name} ${user.last_name}</h2>
-                            <p class="role-badge">${user.role}</p>
+                            <p class="role-badge">${window.Auth.formatRole(user.role)}</p>
                         </div>
                     </div>
 
@@ -159,7 +159,7 @@ const ProfileView = {
                         </div>
                         <div class="form-group">
                             <label>Rol (No editable)</label>
-                            <input type="text" value="${user.role}" disabled>
+                            <input type="text" value="${window.Auth.formatRole(user.role)}" disabled>
                         </div>
                         <div class="form-group">
                             <label for="edit_first_name">Nombre</label>

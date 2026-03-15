@@ -175,8 +175,10 @@ const AdminUsers = {
 
         // Sorting: Pending first
         const sortedUsers = [...users].sort((a, b) => {
-            if (a.role.toLowerCase() === 'pendiente' && b.role.toLowerCase() !== 'pendiente') return -1;
-            if (a.role.toLowerCase() !== 'pendiente' && b.role.toLowerCase() === 'pendiente') return 1;
+            const roleA = a.role.toLowerCase();
+            const roleB = b.role.toLowerCase();
+            if (roleA === 'pendiente' && roleB !== 'pendiente') return -1;
+            if (roleA !== 'pendiente' && roleB === 'pendiente') return 1;
             return 0;
         });
 
@@ -185,7 +187,7 @@ const AdminUsers = {
         }
 
         tbody.innerHTML = sortedUsers.map(user => {
-            const isPending = user.role === 'pendiente';
+            const isPending = user.role.toLowerCase() === 'pendiente';
             const rowClass = isPending ? 'row-pending' : '';
             
             return `
@@ -193,7 +195,7 @@ const AdminUsers = {
                     <td style="padding: 1.2rem 1rem; color: #fff; font-weight: 500;">${user.first_name} ${user.last_name}</td>
                     <td style="padding: 1.2rem 1rem; color: #94a3b8;">${user.email}</td>
                     <td style="padding: 1.2rem 1rem;">
-                        <span class="role-badge ${this.getRoleClass(user.role)}">${user.role}</span>
+                        <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
                     </td>
                     <td style="padding: 1.2rem 1rem; color: #94a3b8; font-size: 0.9rem;">
                         ${user.program} <br> <span style="font-size: 0.8rem; opacity: 0.7;">${user.faculty}</span>
@@ -289,6 +291,48 @@ const AdminUsers = {
 
     renderUserDetail(user) {
         const container = document.getElementById('admin-user-profile');
+        const isPending = user.role.toLowerCase() === 'pendiente';
+
+        if (isPending) {
+            container.innerHTML = `
+                <div class="user-detail-view">
+                    <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
+                    
+                    <div class="profile-card card" style="padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
+                            <h2 style="margin: 0;">Perfil de Usuario</h2>
+                            <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div class="form-group">
+                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Nombre(s)</label>
+                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.first_name}</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Apellidos</label>
+                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.last_name}</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Correo Electrónico</label>
+                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.email}</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="color: var(--primary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Usuario</label>
+                                <div style="background: rgba(30,35,45,0.9); padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(110, 206, 210, 0.2); color: #fff;">${user.username}</div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button id="btn-approve-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #22c55e; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.approveHCPro('${user.id}', this)">Aceptar Solicitud</button>
+                            <button id="btn-reject-hcpro" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; background: #ef4444; border: none; color: #fff; font-weight: 600;" onclick="AdminUsers.rejectHCPro('${user.id}', this)">Denegar Solicitud</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         container.innerHTML = `
             <div class="user-detail-view">
                 <button class="secondary-btn" style="width: auto; margin-bottom: 2rem;" onclick="AdminUsers.closeUserDetail()">← Volver a la lista</button>
@@ -311,7 +355,7 @@ const AdminUsers = {
                 <div class="profile-card card" style="padding: 2rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem;">
                         <h2 style="margin: 0;">Perfil de Usuario</h2>
-                        <span class="role-badge ${this.getRoleClass(user.role)}">${user.role}</span>
+                        <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
                     </div>
 
                     <form id="edit-user-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
@@ -354,19 +398,19 @@ const AdminUsers = {
                         <div class="form-group" style="grid-column: 1 / -1;">
                              <label>Programa / Facultad</label>
                              <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); color: #94a3b8;">
-                                ${user.program} — ${user.faculty}
+                                 ${user.program} — ${user.faculty}
                              </div>
                         </div>
                     </form>
 
                     <div class="action-buttons" style="margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button id="btn-edit-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem;" onclick="AdminUsers.enableUserEdit()">Editar Usuario</button>
-                        <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.ID_User}')">Guardar Cambios</button>
+                        <button id="btn-save-user" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: none;" onclick="AdminUsers.saveUserChanges('${user.id}')">Guardar Cambios</button>
                         
                         <button id="btn-toggle-status" 
                                 class="${user.role === 'Desactivado' ? 'btn-approve' : 'secondary-btn'}" 
                                 style="width: auto; padding: 0.75rem 2rem; background: ${user.role === 'Desactivado' ? '#22c55e' : '#ef4444'}; border: none; color: #fff;" 
-                                onclick="AdminUsers.toggleAccountStatus('${user.ID_User}', '${user.role}')">
+                                onclick="AdminUsers.toggleAccountStatus('${user.id}', '${user.role}')">
                             ${user.role === 'Desactivado' ? 'Reactivar Cuenta' : 'Desactivar Cuenta'}
                         </button>
                     </div>
@@ -496,6 +540,72 @@ const AdminUsers = {
         } catch (err) {
             console.error(err);
             this.showNotification(err.message, 'error');
+        }
+    },
+
+    async approveHCPro(userId, btn) {
+        if (!confirm('¿Estás seguro de que deseas ACEPTAR esta solicitud de profesional de la salud?')) return;
+        
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="width: 14px; height: 14px; margin-right: 8px;"></span> Procesando...`;
+
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/approve/`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Error al aprobar solicitud');
+            }
+
+            this.showNotification('Solicitud procesada: Profesional aceptado.', 'success');
+            this.closeUserDetail();
+            await this.fetchUsers();
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    },
+
+    async rejectHCPro(userId, btn) {
+        if (!confirm('¿Estás seguro de que deseas DENEGAR y ELIMINAR esta solicitud?')) return;
+
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="width: 14px; height: 14px; margin-right: 8px;"></span> Procesando...`;
+
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/reject/`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Token ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Error al denegar solicitud');
+            }
+
+            this.showNotification('Solicitud procesada: Profesional denegado y eliminado.', 'success');
+            this.closeUserDetail();
+            await this.fetchUsers();
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     },
 

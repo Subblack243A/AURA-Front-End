@@ -23,6 +23,9 @@ const UserViews = {
                     <div style="display: flex; gap: 1rem; flex-direction: column;">
                         <button id="landing-login-btn" class="primary-btn" style="padding: 1rem;">Iniciar Sesión</button>
                         <button id="landing-register-btn" class="secondary-btn" style="padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">Crear una Cuenta</button>
+                        <div style="margin-top: 0.5rem; text-align: center;">
+                            <button id="landing-health-pro-btn" class="link-btn" style="color: var(--primary); font-weight: 600; font-size: 1rem;">Soy Profesional de la Salud</button>
+                        </div>
                     </div>
                 </div>
 
@@ -53,6 +56,15 @@ const UserViews = {
 
         document.getElementById('landing-login-btn').addEventListener('click', () => app.renderLogin());
         document.getElementById('landing-register-btn').addEventListener('click', () => app.renderRegister());
+        document.getElementById('landing-health-pro-btn').addEventListener('click', () => {
+            console.log('Health Pro button clicked');
+            if (window.HealthProRegistration) {
+                window.HealthProRegistration.render(app);
+            } else {
+                alert('El módulo de registro profesional no se ha cargado. Por favor, recarga la página.');
+                console.error('HealthProRegistration module not loaded');
+            }
+        });
     },
 
     renderLogin(app) {
@@ -364,11 +376,11 @@ const UserViews = {
                 <form id="register-form">
                     <div class="form-group">
                         <label for="username">Usuario</label>
-                        <input type="text" id="username" required>
+                        <input type="text" id="username" required placeholder="Nombre diferente al real">
                     </div>
                     <div class="form-group">
                         <label for="email">Correo</label>
-                        <input type="email" id="email" required>
+                        <input type="email" id="email" required placeholder="ejemplo@ucundinamarca.edu.co">
                     </div>
                     <div class="form-group">
                         <label for="first_name">Nombre</label>
@@ -409,6 +421,7 @@ const UserViews = {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                             </button>
                         </div>
+                        <small style="color: #94a3b8; font-size: 0.8rem; margin-top: 4px; display: block;">Mínimo 8 caracteres, una mayúscula y un número.</small>
                     </div>
                     <div class="form-group">
                         <label for="confirm_password">Confirmar Contraseña</label>
@@ -427,10 +440,27 @@ const UserViews = {
                         </label>
                     </div>
 
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="terms_acceptance" style="width: auto;" required>
+                            <span>He leído y acepto los <a href="/assets/Terminos de uso.pdf" target="_blank" style="color: var(--primary); text-decoration: none;">términos de uso</a></span>
+                        </label>
+                    </div>
+
                     <button type="submit" data-original-text="Registrarse">Registrarse</button>
                 </form>
                 <button class="link-btn" id="go-to-login">¿Ya tienes cuenta? Inicia Sesión</button>
             </div>
+
+            <style>
+                .input-error {
+                    border-color: #ef4444 !important;
+                    background: rgba(239, 68, 68, 0.05) !important;
+                }
+                .label-error {
+                    color: #ef4444 !important;
+                }
+            </style>
         `;
 
         const form = document.getElementById('register-form');
@@ -531,16 +561,28 @@ const UserViews = {
             }
 
             const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+            const passwordInput = document.getElementById('password');
+            const passwordLabel = document.querySelector('label[for="password"]');
+
             if (!passwordRegex.test(password)) {
+                passwordInput.classList.add('input-error');
+                if (passwordLabel) passwordLabel.classList.add('label-error');
                 app.showError('La contraseña debe tener al menos 8 caracteres, una mayúscula y un número.', false);
                 app.setLoading(false);
                 return;
+            } else {
+                passwordInput.classList.remove('input-error');
+                if (passwordLabel) passwordLabel.classList.remove('label-error');
             }
 
+            const confirmInput = document.getElementById('confirm_password');
             if (password !== confirm_password) {
+                confirmInput.classList.add('input-error');
                 app.showError('Las contraseñas no coinciden.', false);
                 app.setLoading(false);
                 return;
+            } else {
+                confirmInput.classList.remove('input-error');
             }
 
             const userData = {
