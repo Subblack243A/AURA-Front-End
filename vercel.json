@@ -2,7 +2,7 @@
   "outputDirectory": "src",
   "rewrites": [
     {
-      "source": "/((?!login-register/login-register\\.html).*)",
+      "source": "/((?!login-register/login-register\\.html|.*\\..*).*)",
       "destination": "/login-register/login-register.html"
     }
   ],
@@ -25,6 +25,10 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
     },
@@ -38,7 +42,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2))",
+      "source": "/:path*\\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2)",
       "headers": [
         {
           "key": "Cache-Control",
