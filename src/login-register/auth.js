@@ -1,4 +1,7 @@
-const API_URL = '/api';
+// API base URL is set in src/config.js.
+// – Docker dev:  '/api'  (Nginx proxies to backend container)
+// – Vercel prod: full DigitalOcean URL (e.g. 'https://api.yourdomain.com')
+const API_URL = window.API_BASE_URL || '/api';
 
 const Auth = {
     async login(email, password, image) {
