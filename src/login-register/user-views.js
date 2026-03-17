@@ -250,10 +250,35 @@ const UserViews = {
                     </div>
                     <button type="submit" data-original-text="Verificar Código">Verificar Código</button>
                 </form>
-                <button class="link-btn" id="resend-recovery-otp">Reenviar Código</button>
+                <div id="resend-recovery-container" style="text-align: center; margin-top: 1rem;">
+                    <button class="link-btn" id="resend-recovery-otp" disabled>Reenviar Código (90s)</button>
+                </div>
                 <button class="link-btn" id="back-to-email">Cambiar Correo</button>
             </div>
         `;
+
+        const resendBtn = document.getElementById('resend-recovery-otp');
+        let countdown = 90;
+        let timerId = null;
+
+        const startTimer = () => {
+            countdown = 90;
+            resendBtn.disabled = true;
+            if (timerId) clearInterval(timerId);
+            
+            timerId = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(timerId);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'Reenviar Código';
+                } else {
+                    resendBtn.textContent = `Reenviar Código (${countdown}s)`;
+                }
+            }, 1000);
+        };
+
+        startTimer();
 
         document.getElementById('recovery-otp-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -274,6 +299,7 @@ const UserViews = {
             try {
                 await window.Auth.requestPasswordResetOTP(email);
                 alert('Nuevo código enviado.');
+                startTimer();
             } catch (err) {
                 app.showError(err.message);
             } finally {
@@ -667,11 +693,11 @@ const UserViews = {
         const form = document.getElementById('otp-form');
         const resendBtn = document.getElementById('resend-otp-btn');
         const editBtn = document.getElementById('edit-registration-btn');
-        let countdown = 120;
+        let countdown = 90;
         let timerId = null;
 
         const startTimer = () => {
-            countdown = 120;
+            countdown = 90;
             resendBtn.disabled = true;
             if (timerId) clearInterval(timerId);
             
