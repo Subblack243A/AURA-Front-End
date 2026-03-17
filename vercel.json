@@ -4,6 +4,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://api.aurahealthcare.tech/api/:path*"
+    },
+    {
+      "source": "/((?!login-register/login-register\\.html|.*\\..*).*)",
+      "destination": "/login-register/login-register.html"
     }
   ],
   "headers": [
