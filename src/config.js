@@ -13,4 +13,4 @@
  *     DigitalOcean server.  See DEPLOY.md for full instructions.
  */
 
-window.API_BASE_URL = '/api'; // ← Change this for Vercel production deployment
+window.API_BASE_URL = 'https://api.aurahealthcare.tech'; // ← Pega aquí la URL de DigitalOcean para Vercel: 'https://tu-backend.com'
