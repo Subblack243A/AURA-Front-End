@@ -19,12 +19,66 @@
       crossorigin="anonymous"
     />
 
-    <!-- Favicon -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
     <link rel="icon" type="image/x-icon" href="/assets/logo.ico" />
 
-    <link rel="stylesheet" href="/styles.css" />
-    <link rel="stylesheet" href="/login-register/login-register.css" />
-    <link rel="stylesheet" href="/dashboard/student-dashboard.css" />
+    <script>
+      async function loadAssets() {
+        try {
+          const res = await fetch('/version.json?t=' + Date.now());
+          const { version: v } = await res.json();
+
+          // Styles
+          [
+            '/styles.css',
+            '/login-register/login-register.css',
+            '/dashboard/student-dashboard.css'
+          ].forEach(href => {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href + '?v=' + v;
+            document.head.appendChild(link);
+          });
+
+          // Scripts (Maintaining Order)
+          const scripts = [
+            '/navbar.js',
+            '/footer.js',
+            '/config.js',
+            '/login-register/auth.js',
+            '/hcpro/hcpro-registration.js',
+            '/hcpro/hcpro-dashboard.js',
+            '/login-register/camera-handler.js',
+            '/login-register/user-views.js',
+            '/dashboard/student-dashboard.js',
+            '/dashboard/emotion-views.js',
+            '/dashboard/survey-manager.js',
+            '/dashboard/survey-view.js',
+            '/dashboard/profile-view.js',
+            '/admin/admin-dashboard.js',
+            '/admin/admin-reports.js',
+            '/admin/admin-users.js',
+            '/app.js'
+          ];
+
+          for (const src of scripts) {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = src + '?v=' + v;
+              s.onload = resolve;
+              s.onerror = reject;
+              document.body.appendChild(s);
+            });
+          }
+        } catch (e) {
+          console.error("Error loading assets:", e);
+        }
+      }
+      loadAssets();
+    </script>
   </head>
   <body>
     <div id="navbar-placeholder"></div>
@@ -37,26 +91,8 @@
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js" integrity="sha384-KNaFJ+EK516RuHsoycvreec5pD7BkTKJEkjMrVSQWu9KGTl7En4dhIDv7t1DFJ+g" crossorigin="anonymous"></script>
-    <script src="/navbar.js"></script>
-    <script src="/footer.js"></script>
-
-    <script src="/config.js"></script>
-    <script src="/login-register/auth.js"></script>
-    <script src="/hcpro/hcpro-registration.js"></script>
-    <script src="/hcpro/hcpro-dashboard.js"></script>
-    <script src="/login-register/camera-handler.js"></script>
-    <script src="/login-register/user-views.js"></script>
-    <script src="/dashboard/student-dashboard.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js" integrity="sha384-vxxMdt1K6XlME6zkLsgFrrHIeC7XIdAo1GW/uhhObjJXnymxiIi/eoMXsKJA13ZJ" crossorigin="anonymous"></script>
-    <script src="/dashboard/emotion-views.js"></script>
-    <script src="/dashboard/survey-manager.js"></script>
-    <script src="/dashboard/survey-view.js"></script>
-    <script src="/dashboard/profile-view.js"></script>
-    <script src="/admin/admin-dashboard.js"></script>
-    <script src="/admin/admin-reports.js"></script>
-    <script src="/admin/admin-users.js"></script>
-    <script src="/app.js"></script>
 
     <script>
       if ("serviceWorker" in navigator) {
