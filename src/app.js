@@ -229,4 +229,8 @@ const App = {
 };
 
 window.App = App;
-document.addEventListener('DOMContentLoaded', () => App.init());
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    App.init();
+} else {
+    document.addEventListener('DOMContentLoaded', () => App.init());
+}

@@ -24,12 +24,29 @@
     <meta http-equiv="Expires" content="0" />
 
     <link rel="icon" type="image/x-icon" href="/assets/logo.ico" />
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+
+    <main id="app">
+      <!-- Views will be injected here -->
+      <div style="text-align: center">Cargando Aura...</div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js" integrity="sha384-KNaFJ+EK516RuHsoycvreec5pD7BkTKJEkjMrVSQWu9KGTl7En4dhIDv7t1DFJ+g" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js" integrity="sha384-vxxMdt1K6XlME6zkLsgFrrHIeC7XIdAo1GW/uhhObjJXnymxiIi/eoMXsKJA13ZJ" crossorigin="anonymous"></script>
 
     <script>
       async function loadAssets() {
+        console.log("Loading assets...");
         try {
           const res = await fetch('/version.json?t=' + Date.now());
+          if (!res.ok) throw new Error("Could not fetch version.json");
           const { version: v } = await res.json();
+          console.log("App Version:", v);
 
           // Styles
           [
@@ -68,39 +85,39 @@
             await new Promise((resolve, reject) => {
               const s = document.createElement('script');
               s.src = src + '?v=' + v;
-              s.onload = resolve;
-              s.onerror = reject;
-              document.body.appendChild(s);
+              s.onload = () => {
+                console.log(`Loaded: ${src}`);
+                resolve();
+              };
+              s.onerror = () => {
+                console.error(`Failed to load: ${src}`);
+                reject();
+              };
+              document.head.appendChild(s);
             });
           }
+          console.log("All assets loaded successfully.");
         } catch (e) {
-          console.error("Error loading assets:", e);
+          console.error("Critical error loading assets:", e);
+          // Fallback or alert could be added here
         }
       }
       loadAssets();
     </script>
-  </head>
-  <body>
-    <div id="navbar-placeholder"></div>
-
-    <main id="app">
-      <!-- Views will be injected here -->
-      <div style="text-align: center">Cargando Aura...</div>
-    </main>
-
-    <div id="footer-placeholder"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js" integrity="sha384-KNaFJ+EK516RuHsoycvreec5pD7BkTKJEkjMrVSQWu9KGTl7En4dhIDv7t1DFJ+g" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js" integrity="sha384-vxxMdt1K6XlME6zkLsgFrrHIeC7XIdAo1GW/uhhObjJXnymxiIi/eoMXsKJA13ZJ" crossorigin="anonymous"></script>
 
     <script>
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
+        const registerSW = () => {
           navigator.serviceWorker
             .register("/service-worker.js")
             .catch((err) => console.log("SW registration failed: ", err));
-        });
+        };
+
+        if (document.readyState === 'complete') {
+          registerSW();
+        } else {
+          window.addEventListener("load", registerSW);
+        }
       }
     </script>
   </body>
