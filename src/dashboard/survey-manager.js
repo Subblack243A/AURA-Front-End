@@ -41,7 +41,7 @@ const SurveyManager = {
                 
                 console.log(`MBI-SS: Han pasado ${diffDays} días desde la última respuesta.`);
 
-                if (diffDays > 7) {
+                if (diffDays >= 7) {
                     console.log('MBI-SS: Han pasado más de 7 días. Disparando.');
                     this.showSurvey(appInstance);
                 } else {
