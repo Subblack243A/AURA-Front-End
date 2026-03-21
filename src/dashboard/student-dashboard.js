@@ -20,11 +20,7 @@ const StudentDashboard = {
                             <h1>¡Hola de nuevo, ${user.username}!</h1>
                             <p class="subtitle" style="text-align: left; margin-bottom: 0;">Bienvenido a tu panel personal de AURA. Aquí puedes gestionar tu bienestar académico.</p>
                         </div>
-                        <div class="welcome-actions">
-                            <button id="dashboard-logout" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">
-                                Cerrar Sesión
-                            </button>
-                        </div>
+
                     </div>
                 </section>
 
@@ -136,11 +132,7 @@ const StudentDashboard = {
     },
 
     setupEventListeners(appInstance) {
-        document.getElementById('dashboard-logout').addEventListener('click', () => {
-            window.Auth.logout();
-            if (window.Navbar) window.Navbar.update();
-            appInstance.renderLogin();
-        });
+
 
         const historyCard = document.getElementById('card-emotion-history');
         if (historyCard) {
