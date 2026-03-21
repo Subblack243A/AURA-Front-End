@@ -1,4 +1,54 @@
 const EmotionViews = {
+    getBackButtonHTML(id) {
+        return `
+            <button id="${id}" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
+                ← Volver al Panel
+            </button>
+        `;
+    },
+
+    getEmotionsData() {
+        return [
+            { id: 1, name: 'Felicidad', icon: this.getEmojiSVG(1), color: '#10b981' },
+            { id:  2, name: 'Tristeza', icon: this.getEmojiSVG(2), color: '#3b82f6' },
+            { id: 3, name: 'Desagrado', icon: this.getEmojiSVG(3), color: '#8b5cf6' },
+            { id: 4, name: 'Ira', icon: this.getEmojiSVG(4), color: '#ef4444' },
+            { id: 5, name: 'Sorpresa', icon: this.getEmojiSVG(5), color: '#f59e0b' },
+            { id: 6, name: 'Miedo', icon: this.getEmojiSVG(6), color: '#6366f1' },
+            { id: 7, name: 'Neutral', icon: this.getEmojiSVG(7), color: '#94a3b8' }
+        ];
+    },
+
+    getEmotionGridHTML(emotions) {
+        return `
+            <div class="emotion-selection-grid">
+                ${emotions.map(emotion => `
+                    <div class="emotion-card" data-id="${emotion.id}" style="--emotion-color: ${emotion.color}">
+                        <div class="emotion-icon" style="color: ${emotion.color}">${emotion.icon}</div>
+                        <div class="emotion-name">${emotion.name}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+
+    async doEmotionSubmit(emotionId, token) {
+        const response = await fetch('/api/emotion/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            body: JSON.stringify({ emotion: emotionId })
+        });
+        
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || data.detail || 'Error al registrar la emoción.');
+        }
+        return response;
+    },
+
     async render(container, appInstance) {
         const user = window.Auth.getUser();
         if (!user) return;
@@ -12,9 +62,7 @@ const EmotionViews = {
                             <p class="subtitle" style="text-align: left;">Compara tus registros manuales con las detecciones automáticas del sistema.</p>
                         </div>
                         <div class="welcome-actions">
-                            <button id="back-to-dash" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
-                                ← Volver al Panel
-                            </button>
+                            ${this.getBackButtonHTML("back-to-dash")}
                         </div>
                     </div>
                 </section>
@@ -196,15 +244,7 @@ const EmotionViews = {
             return;
         }
 
-        const emotions = [
-            { id: 1, name: 'Felicidad', icon: this.getEmojiSVG(1), color: '#10b981' },
-            { id: 2, name: 'Tristeza', icon: this.getEmojiSVG(2), color: '#3b82f6' },
-            { id: 3, name: 'Desagrado', icon: this.getEmojiSVG(3), color: '#8b5cf6' },
-            { id: 4, name: 'Ira', icon: this.getEmojiSVG(4), color: '#ef4444' },
-            { id: 5, name: 'Sorpresa', icon: this.getEmojiSVG(5), color: '#f59e0b' },
-            { id: 6, name: 'Miedo', icon: this.getEmojiSVG(6), color: '#6366f1' },
-            { id: 7, name: 'Neutral', icon: this.getEmojiSVG(7), color: '#94a3b8' }
-        ];
+        const emotions = this.getEmotionsData();
 
         container.innerHTML = `
             <div class="dashboard-container">
@@ -215,21 +255,12 @@ const EmotionViews = {
                             <p class="subtitle" style="text-align: left;">Selecciona la emoción que mejor represente cómo te sientes en este momento.</p>
                         </div>
                         <div class="welcome-actions">
-                            <button id="back-to-dash-reg" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
-                                ← Volver al Panel
-                            </button>
+                            ${this.getBackButtonHTML("back-to-dash-reg")}
                         </div>
                     </div>
                 </section>
 
-                <div class="emotion-selection-grid">
-                    ${emotions.map(emotion => `
-                        <div class="emotion-card" data-id="${emotion.id}" style="--emotion-color: ${emotion.color}">
-                            <div class="emotion-icon" style="color: ${emotion.color}">${emotion.icon}</div>
-                            <div class="emotion-name">${emotion.name}</div>
-                        </div>
-                    `).join('')}
-                </div>
+                ${this.getEmotionGridHTML(emotions)}
                 <div id="registration-feedback" style="text-align: center; margin-top: 2rem; display: none;"></div>
             </div>
         `;
@@ -252,27 +283,14 @@ const EmotionViews = {
         const token = window.Auth.getToken();
 
         try {
-            const response = await fetch('/api/emotion/register/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Token ${token}`
-                },
-                body: JSON.stringify({ emotion: emotionId })
-            });
-
-            if (response.ok) {
-                feedback.textContent = '¡Emoción registrada con éxito!';
-                feedback.style.color = 'var(--primary)';
-                feedback.style.display = 'block';
-                
-                setTimeout(() => {
-                    appInstance.renderDashboard();
-                }, 1500);
-            } else {
-                const data = await response.json();
-                throw new Error(data.error || 'Error al registrar la emoción');
-            }
+            await this.doEmotionSubmit(emotionId, token);
+            feedback.textContent = '¡Emoción registrada con éxito!';
+            feedback.style.color = 'var(--primary)';
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                appInstance.renderDashboard();
+            }, 1500);
         } catch (err) {
             feedback.textContent = err.message;
             feedback.style.color = 'var(--error)';
@@ -290,9 +308,7 @@ const EmotionViews = {
                             <p class="subtitle" style="text-align: left;">Has realizado demasiados registros seguidos. Por favor, espera un momento.</p>
                         </div>
                         <div class="welcome-actions">
-                            <button id="back-to-dash-reg" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
-                                ← Volver al Panel
-                            </button>
+                            ${this.getBackButtonHTML("back-to-dash-reg")}
                         </div>
                     </div>
                 </section>
@@ -380,15 +396,7 @@ const EmotionViews = {
      * No "back" button — the user MUST register before proceeding.
      */
     async renderMandatoryRegister(container, appInstance) {
-        const emotions = [
-            { id: 1, name: 'Felicidad', icon: this.getEmojiSVG(1), color: '#10b981' },
-            { id: 2, name: 'Tristeza', icon: this.getEmojiSVG(2), color: '#3b82f6' },
-            { id: 3, name: 'Desagrado', icon: this.getEmojiSVG(3), color: '#8b5cf6' },
-            { id: 4, name: 'Ira', icon: this.getEmojiSVG(4), color: '#ef4444' },
-            { id: 5, name: 'Sorpresa', icon: this.getEmojiSVG(5), color: '#f59e0b' },
-            { id: 6, name: 'Miedo', icon: this.getEmojiSVG(6), color: '#6366f1' },
-            { id: 7, name: 'Neutral', icon: this.getEmojiSVG(7), color: '#94a3b8' }
-        ];
+        const emotions = this.getEmotionsData();
 
         container.innerHTML = `
             <div class="dashboard-container">
@@ -404,14 +412,7 @@ const EmotionViews = {
                     </div>
                 </section>
 
-                <div class="emotion-selection-grid">
-                    ${emotions.map(emotion => `
-                        <div class="emotion-card" data-id="${emotion.id}" style="--emotion-color: ${emotion.color}">
-                            <div class="emotion-icon" style="color: ${emotion.color}">${emotion.icon}</div>
-                            <div class="emotion-name">${emotion.name}</div>
-                        </div>
-                    `).join('')}
-                </div>
+                ${this.getEmotionGridHTML(emotions)}
                 <div id="mandatory-registration-feedback" style="text-align: center; margin-top: 2rem; display: none;"></div>
             </div>
         `;
@@ -427,25 +428,12 @@ const EmotionViews = {
                 cards.forEach(c => c.style.pointerEvents = 'none');
 
                 try {
-                    const response = await fetch('/api/emotion/register/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Token ${token}`
-                        },
-                        body: JSON.stringify({ emotion: emotionId })
-                    });
-
-                    if (response.ok) {
-                        feedback.textContent = '¡Emoción registrada! Accediendo al panel...';
-                        feedback.style.color = 'var(--primary)';
-                        feedback.style.display = 'block';
-                        console.log('Mandatory emotion registered, redirecting to dashboard.');
-                        setTimeout(() => appInstance.renderDashboard(), 1200);
-                    } else {
-                        const errData = await response.json();
-                        throw new Error(errData.error || errData.detail || 'Error al registrar la emoción.');
-                    }
+                    await this.doEmotionSubmit(emotionId, token);
+                    feedback.textContent = '¡Emoción registrada! Accediendo al panel...';
+                    feedback.style.color = 'var(--primary)';
+                    feedback.style.display = 'block';
+                    console.log('Mandatory emotion registered, redirecting to dashboard.');
+                    setTimeout(() => appInstance.renderDashboard(), 1200);
                 } catch (err) {
                     feedback.textContent = err.message;
                     feedback.style.color = 'var(--error, #f87171)';
