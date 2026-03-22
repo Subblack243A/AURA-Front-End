@@ -23,11 +23,7 @@ const HealthProDashboard = {
                             <h1>Gestión de Estudiantes</h1>
                             <p class="subtitle" style="text-align: left; margin-bottom: 0;">Bienvenido, ${user.username}. Aquí puedes ver y buscar a los estudiantes a tu cargo.</p>
                         </div>
-                        <div class="welcome-actions">
-                            <button id="hcpro-logout" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2);">
-                                Cerrar Sesión
-                            </button>
-                        </div>
+
                     </div>
                 </section>
 
@@ -651,14 +647,6 @@ const HealthProDashboard = {
     },
 
     setupEventListeners(appInstance) {
-        const logoutBtn = document.getElementById('hcpro-logout');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                window.Auth.logout();
-                if (window.Navbar) window.Navbar.update();
-                appInstance.renderLogin();
-            });
-        }
 
         const searchInput = document.getElementById('search-students');
         if (searchInput) {

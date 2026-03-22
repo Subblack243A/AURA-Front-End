@@ -58,7 +58,7 @@ const Footer = {
                             </div>
                         </div>
                         <div class="footer-extra">
-                            <a href="https://github.com/Subblack243A/AURA-Back-End/blob/master/README.md" target="_blank" class="docs-link">Documentación del Proyecto</a>
+                            <a href="https://github.com/Subblack243A/AURA-Docs" target="_blank" class="docs-link">Documentación del Proyecto</a>
                         </div>
                     </div>
                 </div>
