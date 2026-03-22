@@ -206,7 +206,7 @@ const StudentDashboard = {
                         <ol class="portal-instructions">
                             <li>Haz clic en <strong>"Descargar Agente"</strong> abajo para obtener un archivo .zip configurado con tus credenciales seguras.</li>
                             <li>Localiza el archivo <code>Agente_Aura.zip</code> en donde lo descargaste, haz clic derecho y selecciona <strong>"Extraer en "Agente_Aura"..."</strong> (o usa WinRAR/7-Zip) para descomprimir el contenido en una carpeta segura.</li>
-                            <li>Abre la carpeta extraída y haz doble clic en <code>emotion_agent.exe</code>. Al ser la primera vez, <strong>Windows Defender podría mostrar una advertencia azul</strong> (Windows protegió su PC). Haz clic en <strong>"Más información"</strong> (More info) y luego en el botón <strong>"Ejecutar de todas formas"</strong> (Run anyway). <em>(No aparecerá ninguna ventana, el agente se ejecutará silenciosamente en segundo plano)</em>.</li>
+                            <li>Abre la carpeta extraída y haz doble clic en <code>Aura.exe</code>. Al ser la primera vez, <strong>Windows Defender podría mostrar una advertencia azul</strong> (Windows protegió su PC). Haz clic en <strong>"Más información"</strong> (More info) y luego en el botón <strong>"Ejecutar de todas formas"</strong> (Run anyway). <em>(No aparecerá ninguna ventana, el agente se ejecutará silenciosamente en segundo plano)</em>.</li>
                         </ol>
                     </div>
                     
