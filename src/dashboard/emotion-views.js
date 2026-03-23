@@ -172,7 +172,7 @@ const EmotionViews = {
             },
             stroke: { curve: 'smooth', width: 3 },
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1, stops: [0, 90, 100] } },
-            xaxis: { type: 'datetime', labels: { style: { colors: '#94a3b8' } } },
+            xaxis: { type: 'datetime', labels: { datetimeUTC: false, style: { colors: '#94a3b8' } } },
             yaxis: {
                 min: 1, max: 7, tickAmount: 6,
                 labels: {

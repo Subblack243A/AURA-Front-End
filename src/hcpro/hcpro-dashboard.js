@@ -585,7 +585,7 @@ const HealthProDashboard = {
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 3 },
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.1, stops: [20, 100] } },
-            xaxis: { type: 'datetime', labels: { style: { fontSize: '10px' } } },
+            xaxis: { type: 'datetime', labels: { datetimeUTC: false, style: { fontSize: '10px' } } },
             yaxis: { 
                 min: 0, 
                 max: 5, 
@@ -628,7 +628,7 @@ const HealthProDashboard = {
             colors: ['#6366f1'],
             markers: { size: 5, strokeWidth: 0, hover: { size: 7 } },
             stroke: { width: 3 },
-            xaxis: { type: 'datetime', labels: { style: { fontSize: '10px' } } },
+            xaxis: { type: 'datetime', labels: { datetimeUTC: false, style: { fontSize: '10px' } } },
             yaxis: { 
                 min: 0, 
                 max: 5, 
