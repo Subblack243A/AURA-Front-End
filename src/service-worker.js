@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-cache-v5';
+const CACHE_NAME = 'aura-cache-v10';
 const urlsToCache = [
     '/',
     '/index.html',
