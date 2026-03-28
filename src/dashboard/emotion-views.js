@@ -31,15 +31,293 @@ const EmotionViews = {
             </div>
         `;
     },
+    async fetchCauses(token) {
+        try {
+            const response = await fetch('/api/causes/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (response.ok) return await response.json();
+            return [];
+        } catch (err) {
+            console.error('Error fetching causes:', err);
+            return [];
+        }
+    },
 
-    async doEmotionSubmit(emotionId, token) {
+    getEnergySelectionHTML() {
+        const labels = {
+            1: "Muy baja",
+            2: "Baja",
+            3: "Media",
+            4: "Alta",
+            5: "Muy alta"
+        };
+        return `
+            <div class="step-container fade-in" id="step-energy" style="display: none; margin-top: 2rem;">
+                <h2 style="color: white; margin-bottom: 0.5rem; text-align: left;">¿Cuál es tu nivel de energía?</h2>
+                <p class="subtitle" style="margin-bottom: 2rem; text-align: left;">Elige del 1 al 5 el nivel de energía con el que te sientes ahora mismo.</p>
+                
+                <div class="energy-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem; width: 100%;">
+                    ${[1,2,3,4,5].map(level => `
+                        <button class="energy-btn" data-level="${level}" style="
+                            background: var(--card-bg); 
+                            border: 1px solid var(--card-border); 
+                            border-radius: 16px; 
+                            padding: 1.5rem 0.5rem; 
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 0.75rem;
+                            width: 100%;
+                        ">
+                            <div class="battery-icon" style="color: var(--primary); display: flex; align-items: center; justify-content: center; height: 32px;">
+                                ${this.getBatterySVG(level)}
+                            </div>
+                            <span style="color: white; font-weight: bold; font-size: 1.2rem; line-height: 1;">${level}</span>
+                            <span style="color: rgba(255,255,255,0.7); font-size: 0.85rem; text-align: center; line-height: 1.2;">${labels[level]}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    },
+
+    getBatterySVG(level) {
+        let items = '';
+        for(let i=1; i<=5; i++) {
+            const fill = i <= level ? 'currentColor' : 'rgba(255,255,255,0.1)';
+            items += `<rect x="${3 + (i-1)*4}" y="6" width="3" height="12" fill="${fill}" rx="1"/>`;
+        }
+        return `
+            <svg viewBox="0 0 28 24" width="36" height="32">
+                <rect x="1" y="4" width="24" height="16" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" rx="2"/>
+                <path d="M26 9v6" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+                ${items}
+            </svg>
+        `;
+    },
+
+    getCauseIcon(causeName) {
+        const name = causeName.toLowerCase();
+        
+        // Académico - Libro (Book)
+        if (name.includes('académico')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+        }
+        // Comunidad/Social - Usuarios (Users)
+        if (name.includes('comunidad') || name.includes('social')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><circle cx="19" cy="11" r="4"/></svg>`;
+        }
+        // Espiritual/Religioso - Chispas/Loto (Sparkles/Sun)
+        if (name.includes('espiritual') || name.includes('religioso')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        }
+        // Familia/Relaciones - Corazón (Heart)
+        if (name.includes('familia') || name.includes('relaciones')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+        }
+        // Finanzas/Economía Personal - Monedas (Coins)
+        if (name.includes('finanzas') || name.includes('economía')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>`;
+        }
+        // Juegos/Ocio - Mando (Gamepad)
+        if (name.includes('juegos') || name.includes('ocio')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>`;
+        }
+        // Laboral - Maletín (Briefcase)
+        if (name.includes('laboral') || name.includes('trabajo')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+        }
+        // Salud Física/Mental - Actividad/Pulso (Activity)
+        if (name.includes('salud')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
+        }
+        
+        // Predeterminado o "Otra" - Ayuda (HelpCircle)
+        return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    },
+
+    getCausesSelectionHTML(causes) {
+        // Ordenar causas: "Otra" al final
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
+
+        return `
+            <div class="step-container fade-in" id="step-causes" style="display: none; margin-top: 3rem;">
+                <h2 style="color: white; margin-bottom: 0.5rem; text-align: left;">Causa de la Emoción</h2>
+                <p class="subtitle" style="margin-bottom: 2rem; text-align: left;">¿Cuál definirías como la principal causa de la emoción a registrar?</p>
+                
+                <div class="causes-grid" style="
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1.25rem;
+                    width: 100%;
+                ">
+                    ${sortedCauses.map(cause => `
+                        <div class="cause-card" data-id="${cause.ID_Cause}" style="
+                            background: var(--card-bg);
+                            border: 1px solid var(--card-border);
+                            border-radius: 16px;
+                            padding: 1.25rem;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            align-items: center;
+                            gap: 1rem;
+                        ">
+                            <div style="color: var(--secondary); font-size: 1.5rem; display: flex;">
+                                ${this.getCauseIcon(cause.Cause)}
+                            </div>
+                            <div style="color: white; font-weight: 500; font-size: 0.95rem; text-align: left;">
+                                ${cause.Cause}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 3rem; text-align: center;">
+                    <button id="final-submit-emotion" class="btn-primary" disabled style="
+                        padding: 1rem 3rem;
+                        font-size: 1.2rem;
+                        border-radius: 30px;
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                        transition: all 0.3s ease;
+                    ">Enviar Registro</button>
+                    <div id="step-feedback" style="margin-top: 1rem; font-weight: 500; display: none;"></div>
+                </div>
+            </div>
+        `;
+    },
+
+    bindSequentialFlow(container, appInstance, causes) {
+        let selectedEmotion = null;
+        let selectedEnergy = null;
+        let selectedCause = null;
+        
+        const token = window.Auth.getToken();
+        const cards = container.querySelectorAll('.emotion-card');
+        const energyBtns = container.querySelectorAll('.energy-btn');
+        const causeCards = container.querySelectorAll('.cause-card');
+        const submitBtn = container.querySelector('#final-submit-emotion');
+        const feedback = container.querySelector('#step-feedback');
+        
+        const checkSubmitReady = () => {
+            if (selectedEmotion && selectedEnergy && selectedCause) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
+        };
+
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                cards.forEach(c => {
+                    c.style.opacity = '0.5';
+                    c.style.transform = 'scale(0.95)';
+                    c.style.border = '2px solid transparent';
+                });
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1.05)';
+                card.style.border = `2px solid ${card.style.getPropertyValue('--emotion-color') || 'var(--primary)'}`;
+                
+                selectedEmotion = parseInt(card.dataset.id);
+                
+                const sEnergy = document.getElementById('step-energy');
+                const sCauses = document.getElementById('step-causes');
+                sEnergy.style.display = 'block';
+                sCauses.style.display = 'block';
+                setTimeout(() => sEnergy.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                
+                checkSubmitReady();
+            });
+        });
+        
+        energyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                energyBtns.forEach(b => {
+                    b.style.opacity = '0.5';
+                    b.style.transform = 'scale(0.95)';
+                    b.style.border = '2px solid transparent';
+                });
+                btn.style.opacity = '1';
+                btn.style.transform = 'scale(1.05)';
+                btn.style.border = '2px solid var(--primary)';
+                selectedEnergy = parseInt(btn.dataset.level);
+                checkSubmitReady();
+            });
+        });
+
+        causeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                causeCards.forEach(c => {
+                    c.style.opacity = '0.5';
+                    c.style.transform = 'scale(0.95)';
+                    c.style.border = '2px solid transparent';
+                });
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1.05)';
+                card.style.border = '2px solid var(--primary)';
+                selectedCause = parseInt(card.dataset.id);
+                checkSubmitReady();
+            });
+        });
+
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async () => {
+                if (!selectedEmotion || !selectedEnergy || !selectedCause) return;
+                
+                submitBtn.disabled = true;
+                const origText = submitBtn.textContent;
+                submitBtn.innerHTML = 'Enviando...';
+                submitBtn.style.opacity = '0.7';
+
+                try {
+                    await this.doEmotionSubmit({
+                        emotion: selectedEmotion,
+                        cause: selectedCause,
+                        energy_level: selectedEnergy
+                    }, token);
+                    
+                    feedback.textContent = '¡Emoción registrada con éxito!';
+                    feedback.style.color = 'var(--primary)';
+                    feedback.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        appInstance.renderDashboard();
+                    }, 1500);
+                } catch (err) {
+                    feedback.textContent = err.message || 'Error al enviar.';
+                    feedback.style.color = 'var(--error, #f87171)';
+                    feedback.style.display = 'block';
+                    
+                    submitBtn.textContent = origText;
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            });
+        }
+    },
+
+
+    async doEmotionSubmit(payload, token) {
         const response = await fetch('/api/emotion/register/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Token ${token}`
             },
-            body: JSON.stringify({ emotion: emotionId })
+            body: JSON.stringify(payload)
         });
         
         if (!response.ok) {
@@ -245,6 +523,17 @@ const EmotionViews = {
         }
 
         const emotions = this.getEmotionsData();
+        const token = window.Auth.getToken();
+        const causes = await this.fetchCauses(token);
+
+        // Ordenar causas para consistencia
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
 
         container.innerHTML = `
             <div class="dashboard-container">
@@ -261,7 +550,10 @@ const EmotionViews = {
                 </section>
 
                 ${this.getEmotionGridHTML(emotions)}
-                <div id="registration-feedback" style="text-align: center; margin-top: 2rem; display: none;"></div>
+                <div id="extra-steps-container">
+                    ${this.getEnergySelectionHTML()}
+                    ${this.getCausesSelectionHTML(sortedCauses)}
+                </div>
             </div>
         `;
 
@@ -269,13 +561,7 @@ const EmotionViews = {
             appInstance.renderDashboard();
         });
 
-        const cards = container.querySelectorAll('.emotion-card');
-        cards.forEach(card => {
-            card.addEventListener('click', async () => {
-                const emotionId = parseInt(card.dataset.id);
-                await this.submitEmotion(emotionId, appInstance);
-            });
-        });
+        this.bindSequentialFlow(container, appInstance, sortedCauses);
     },
 
     async submitEmotion(emotionId, appInstance) {
@@ -397,6 +683,17 @@ const EmotionViews = {
      */
     async renderMandatoryRegister(container, appInstance) {
         const emotions = this.getEmotionsData();
+        const token = window.Auth.getToken();
+        const causes = await this.fetchCauses(token);
+
+        // Ordenar causas para consistencia
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
 
         container.innerHTML = `
             <div class="dashboard-container">
@@ -413,36 +710,14 @@ const EmotionViews = {
                 </section>
 
                 ${this.getEmotionGridHTML(emotions)}
-                <div id="mandatory-registration-feedback" style="text-align: center; margin-top: 2rem; display: none;"></div>
+                <div id="extra-steps-container">
+                    ${this.getEnergySelectionHTML()}
+                    ${this.getCausesSelectionHTML(sortedCauses)}
+                </div>
             </div>
         `;
 
-        const cards = container.querySelectorAll('.emotion-card');
-        cards.forEach(card => {
-            card.addEventListener('click', async () => {
-                const emotionId = parseInt(card.dataset.id);
-                const token = window.Auth.getToken();
-                const feedback = document.getElementById('mandatory-registration-feedback');
-
-                // Disable all cards while submitting
-                cards.forEach(c => c.style.pointerEvents = 'none');
-
-                try {
-                    await this.doEmotionSubmit(emotionId, token);
-                    feedback.textContent = '¡Emoción registrada! Accediendo al panel...';
-                    feedback.style.color = 'var(--primary)';
-                    feedback.style.display = 'block';
-                    console.log('Mandatory emotion registered, redirecting to dashboard.');
-                    setTimeout(() => appInstance.renderDashboard(), 1200);
-                } catch (err) {
-                    feedback.textContent = err.message;
-                    feedback.style.color = 'var(--error, #f87171)';
-                    feedback.style.display = 'block';
-                    // Re-enable cards so the user can retry
-                    cards.forEach(c => c.style.pointerEvents = '');
-                }
-            });
-        });
+        this.bindSequentialFlow(container, appInstance, sortedCauses);
     }
 };
 
