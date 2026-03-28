@@ -1,9 +1,14 @@
 const HealthProDashboard = {
     allStudents: [],
+
+    _logError(msg, err) {
+        console.error(`[HealthProDashboard] ${msg}`, err);
+    },
     
     async render(container, appInstance) {
-        const user = window.Auth.getUser();
-        const role = window.Auth.getRole();
+        const { Auth } = window;
+        const user = Auth.getUser();
+        const role = Auth.getRole();
 
         // Security check
         if (role !== 'Profesional de la Salud' && role !== 'Pro. Salud') {
@@ -136,8 +141,9 @@ const HealthProDashboard = {
     },
 
     async loadStudents(searchTerm = '') {
+        const { Auth } = window;
         try {
-            const token = window.Auth.getToken();
+            const token = Auth.getToken();
             let url = '/api/hcpro/students/';
             if (searchTerm) {
                 url += `?search=${encodeURIComponent(searchTerm)}`;
@@ -160,7 +166,7 @@ const HealthProDashboard = {
             }
 
         } catch (err) {
-            console.error('Failed to load students:', err);
+            this._logError('Failed to load students', err);
         }
     },
 
@@ -209,11 +215,12 @@ const HealthProDashboard = {
             </div>
         `;
 
-        const userRole = window.Auth.getRole();
+        const { Auth } = window;
+        const userRole = Auth.getRole();
         const isHP = userRole === 'Profesional de la Salud' || userRole === 'Pro. Salud';
 
         try {
-            const token = window.Auth.getToken();
+            const token = Auth.getToken();
             
             // 1. Fetch user detail
             const userResponse = await fetch(`/api/admin/users/${studentId}/`, {
@@ -315,7 +322,7 @@ const HealthProDashboard = {
             }
 
         } catch (err) {
-            console.error(err);
+            this._logError('Error showing student detail', err);
             body.innerHTML = `
                 <div style="padding: 4rem; text-align: center;">
                     <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 1.5rem;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -347,7 +354,7 @@ const HealthProDashboard = {
             this.renderManualTimeline(tlData.manual_timeline);
 
         } catch (err) {
-            console.error('Error rendering HP charts:', err);
+            this._logError('Error rendering HP charts', err);
         }
     },
 
@@ -398,15 +405,15 @@ const HealthProDashboard = {
             `;
 
         } catch (err) {
-            console.error(err);
+            this._logError('Error loading surveys', err);
             container.innerHTML = `<p style="color: #f87171;">Error al cargar historial de encuestas.</p>`;
         }
     },
 
     async openSurveyDetail(surveyId) {
-        // Fetch detail and show modal (reusing logic or implementing directly to avoid dependency issues)
+        const { Auth, ProfileView } = window;
         try {
-            const token = window.Auth.getToken();
+            const token = Auth.getToken();
             const response = await fetch(`/api/surveys/${surveyId}/`, {
                 headers: { 'Authorization': `Token ${token}` }
             });
@@ -415,14 +422,14 @@ const HealthProDashboard = {
             
             // We can use ProfileView if it's available for the UI part, 
             // but let's make sure we have a reference or a way to show it.
-            if (window.ProfileView && window.ProfileView.showDetailModal) {
-                window.ProfileView.showDetailModal(data);
+            if (ProfileView && ProfileView.showDetailModal) {
+                ProfileView.showDetailModal(data);
             } else {
                 // Fallback implementation if ProfileView is not loaded
                 this.showGenericDetailModal(data);
             }
         } catch (err) {
-            console.error(err);
+            this._logError('Error loading survey detail', err);
             alert("Error al cargar el detalle de la encuesta");
         }
     },
@@ -537,7 +544,8 @@ const HealthProDashboard = {
             tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } }
         };
 
-        new window.ApexCharts(document.querySelector("#chart-facial-avg"), options).render();
+        const { ApexCharts } = window;
+        new ApexCharts(document.querySelector("#chart-facial-avg"), options).render();
     },
 
     renderManualAvg(data) {
@@ -555,7 +563,8 @@ const HealthProDashboard = {
             grid: { borderColor: 'rgba(255,255,255,0.05)' }
         };
 
-        new window.ApexCharts(document.querySelector("#chart-manual-avg"), options).render();
+        const { ApexCharts } = window;
+        new ApexCharts(document.querySelector("#chart-manual-avg"), options).render();
     },
 
     renderFacialTimeline(data) {
@@ -600,7 +609,8 @@ const HealthProDashboard = {
             grid: { borderColor: 'rgba(255,255,255,0.05)' }
         };
 
-        new window.ApexCharts(document.querySelector("#chart-facial-timeline"), options).render();
+        const { ApexCharts } = window;
+        new ApexCharts(document.querySelector("#chart-facial-timeline"), options).render();
     },
 
     renderManualTimeline(data) {
@@ -643,7 +653,8 @@ const HealthProDashboard = {
             grid: { borderColor: 'rgba(255,255,255,0.05)' }
         };
 
-        new window.ApexCharts(document.querySelector("#chart-manual-timeline"), options).render();
+        const { ApexCharts } = window;
+        new ApexCharts(document.querySelector("#chart-manual-timeline"), options).render();
     },
 
     setupEventListeners(appInstance) {

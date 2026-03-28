@@ -1,4 +1,8 @@
 const EmotionViews = {
+    _logError(msg, err) {
+        console.error(`[EmotionViews] ${msg}`, err);
+    },
+
     getBackButtonHTML(id) {
         return `
             <button id="${id}" class="btn-secondary" style="width: auto; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2);">
@@ -39,7 +43,7 @@ const EmotionViews = {
             if (response.ok) return await response.json();
             return [];
         } catch (err) {
-            console.error('Error fetching causes:', err);
+            this._logError('Error fetching causes', err);
             return [];
         }
     },
@@ -203,7 +207,8 @@ const EmotionViews = {
         let selectedEnergy = null;
         let selectedCause = null;
         
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
         const cards = container.querySelectorAll('.emotion-card');
         const energyBtns = container.querySelectorAll('.energy-btn');
         const causeCards = container.querySelectorAll('.cause-card');
@@ -328,7 +333,8 @@ const EmotionViews = {
     },
 
     async render(container, appInstance) {
-        const user = window.Auth.getUser();
+        const { Auth } = window;
+        const user = Auth.getUser();
         if (!user) return;
 
         container.innerHTML = `
@@ -367,7 +373,8 @@ const EmotionViews = {
     },
 
     async initCharts(userId) {
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
         const headers = { 'Authorization': `Token ${token}` };
 
         try {
@@ -383,7 +390,7 @@ const EmotionViews = {
             this.renderTimeline(timelineData.facial_timeline, "#facialTimelineChart", "Reconocimiento Facial", "#f87171");
 
         } catch (err) {
-            console.error('Error fetching chart data:', err);
+            this._logError('Error fetching chart data', err);
         }
     },
 
@@ -467,11 +474,13 @@ const EmotionViews = {
             }
         };
 
+        const { ApexCharts } = window;
         new ApexCharts(container, options).render();
     },
 
     async checkLastRegistration() {
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
         try {
             const response = await fetch('/api/emotion/register/', {
                 headers: { 'Authorization': `Token ${token}` }
@@ -496,7 +505,7 @@ const EmotionViews = {
                 }
             }
         } catch (err) {
-            console.error('Error checking last registration:', err);
+            this._logError('Error checking last registration', err);
         }
         return { canRegister: true };
     },
@@ -566,7 +575,8 @@ const EmotionViews = {
 
     async submitEmotion(emotionId, appInstance) {
         const feedback = document.getElementById('registration-feedback');
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
 
         try {
             await this.doEmotionSubmit(emotionId, token);
@@ -653,7 +663,8 @@ const EmotionViews = {
      * Returns true if: no previous registration exists OR last one was > 24 hours ago.
      */
     async checkNeedsEmotionRegistration() {
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
         if (!token) return false; // Not logged in, skip
         try {
             const response = await fetch('/api/emotion/register/', {
@@ -672,7 +683,7 @@ const EmotionViews = {
 
             return (serverTime - lastDate) > hours24;
         } catch (err) {
-            console.error('Error checking 24h emotion requirement:', err);
+            this._logError('Error checking 24h emotion requirement', err);
             return false; // On error, don't block the user
         }
     },
@@ -683,7 +694,8 @@ const EmotionViews = {
      */
     async renderMandatoryRegister(container, appInstance) {
         const emotions = this.getEmotionsData();
-        const token = window.Auth.getToken();
+        const { Auth } = window;
+        const token = Auth.getToken();
         const causes = await this.fetchCauses(token);
 
         // Ordenar causas para consistencia
