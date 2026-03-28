@@ -100,7 +100,56 @@ const EmotionViews = {
         `;
     },
 
+    getCauseIcon(causeName) {
+        const name = causeName.toLowerCase();
+        
+        // Académico - Libro (Book)
+        if (name.includes('académico')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
+        }
+        // Comunidad/Social - Usuarios (Users)
+        if (name.includes('comunidad') || name.includes('social')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><circle cx="19" cy="11" r="4"/></svg>`;
+        }
+        // Espiritual/Religioso - Chispas/Loto (Sparkles/Sun)
+        if (name.includes('espiritual') || name.includes('religioso')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+        }
+        // Familia/Relaciones - Corazón (Heart)
+        if (name.includes('familia') || name.includes('relaciones')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`;
+        }
+        // Finanzas/Economía Personal - Monedas (Coins)
+        if (name.includes('finanzas') || name.includes('economía')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>`;
+        }
+        // Juegos/Ocio - Mando (Gamepad)
+        if (name.includes('juegos') || name.includes('ocio')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/></svg>`;
+        }
+        // Laboral - Maletín (Briefcase)
+        if (name.includes('laboral') || name.includes('trabajo')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+        }
+        // Salud Física/Mental - Actividad/Pulso (Activity)
+        if (name.includes('salud')) {
+            return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
+        }
+        
+        // Predeterminado o "Otra" - Ayuda (HelpCircle)
+        return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+    },
+
     getCausesSelectionHTML(causes) {
+        // Ordenar causas: "Otra" al final
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
+
         return `
             <div class="step-container fade-in" id="step-causes" style="display: none; margin-top: 3rem;">
                 <h2 style="color: white; margin-bottom: 0.5rem; text-align: left;">Causa de la Emoción</h2>
@@ -108,10 +157,11 @@ const EmotionViews = {
                 
                 <div class="causes-grid" style="
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                    gap: 1rem;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1.25rem;
+                    width: 100%;
                 ">
-                    ${causes.map(cause => `
+                    ${sortedCauses.map(cause => `
                         <div class="cause-card" data-id="${cause.ID_Cause}" style="
                             background: var(--card-bg);
                             border: 1px solid var(--card-border);
@@ -123,12 +173,8 @@ const EmotionViews = {
                             align-items: center;
                             gap: 1rem;
                         ">
-                            <div style="color: var(--primary); font-size: 1.5rem; display: flex;">
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                </svg>
+                            <div style="color: var(--secondary); font-size: 1.5rem; display: flex;">
+                                ${this.getCauseIcon(cause.Cause)}
                             </div>
                             <div style="color: white; font-weight: 500; font-size: 0.95rem; text-align: left;">
                                 ${cause.Cause}
@@ -480,6 +526,15 @@ const EmotionViews = {
         const token = window.Auth.getToken();
         const causes = await this.fetchCauses(token);
 
+        // Ordenar causas para consistencia
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
+
         container.innerHTML = `
             <div class="dashboard-container">
                 <section class="welcome-section">
@@ -497,7 +552,7 @@ const EmotionViews = {
                 ${this.getEmotionGridHTML(emotions)}
                 <div id="extra-steps-container">
                     ${this.getEnergySelectionHTML()}
-                    ${this.getCausesSelectionHTML(causes)}
+                    ${this.getCausesSelectionHTML(sortedCauses)}
                 </div>
             </div>
         `;
@@ -506,7 +561,7 @@ const EmotionViews = {
             appInstance.renderDashboard();
         });
 
-        this.bindSequentialFlow(container, appInstance, causes);
+        this.bindSequentialFlow(container, appInstance, sortedCauses);
     },
 
     async submitEmotion(emotionId, appInstance) {
@@ -631,6 +686,15 @@ const EmotionViews = {
         const token = window.Auth.getToken();
         const causes = await this.fetchCauses(token);
 
+        // Ordenar causas para consistencia
+        const sortedCauses = [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
+
         container.innerHTML = `
             <div class="dashboard-container">
                 <section class="welcome-section">
@@ -648,12 +712,12 @@ const EmotionViews = {
                 ${this.getEmotionGridHTML(emotions)}
                 <div id="extra-steps-container">
                     ${this.getEnergySelectionHTML()}
-                    ${this.getCausesSelectionHTML(causes)}
+                    ${this.getCausesSelectionHTML(sortedCauses)}
                 </div>
             </div>
         `;
 
-        this.bindSequentialFlow(container, appInstance, causes);
+        this.bindSequentialFlow(container, appInstance, sortedCauses);
     }
 };
 
