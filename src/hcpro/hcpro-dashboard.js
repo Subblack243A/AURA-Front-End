@@ -1,8 +1,37 @@
 const HealthProDashboard = {
     allStudents: [],
 
+    _emotionMap: { 
+        'feliz': 5, 'felicidad': 5, 'happiness': 5,
+        'neutral': 4, 
+        'sorpresa': 3, 'surprise': 3,
+        'triste': 2, 'tristeza': 2, 'sadness': 2,
+        'miedo': 1, 'fear': 1,
+        'enojado': 0, 'enojo': 0, 'ira': 0, 'anger': 0,
+        'disgusto': 0, 'disgust': 0
+    },
+    _reverseMap: ['Enojado', 'Miedo', 'Triste', 'Sorpresa', 'Neutral', 'Feliz'],
+
     _logError(msg, err) {
         console.error(`[HealthProDashboard] ${msg}`, err);
+    },
+
+    _getHeaders(Auth) {
+        return { 'Authorization': `Token ${Auth.getToken()}` };
+    },
+
+    _getWelcomeHeaderHTML(title, subtitle, badgeHTML = '') {
+        return `
+            <section class="welcome-section">
+                <div class="welcome-header">
+                    <div class="welcome-text">
+                        ${badgeHTML}
+                        <h1>${title}</h1>
+                        <p class="subtitle" style="text-align: left; margin-bottom: 0;">${subtitle}</p>
+                    </div>
+                </div>
+            </section>
+        `;
     },
     
     async render(container, appInstance) {
@@ -16,21 +45,16 @@ const HealthProDashboard = {
             return;
         }
 
+        const badgeHTML = `
+            <div class="user-badge" style="background: rgba(110, 206, 210, 0.1); color: var(--primary); border: 1px solid rgba(110, 206, 210, 0.2);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                Profesional de la Salud
+            </div>
+        `;
+
         container.innerHTML = `
             <div class="dashboard-container">
-                <section class="welcome-section">
-                    <div class="welcome-header">
-                        <div class="welcome-text">
-                            <div class="user-badge" style="background: rgba(110, 206, 210, 0.1); color: var(--primary); border: 1px solid rgba(110, 206, 210, 0.2);">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                                Profesional de la Salud
-                            </div>
-                            <h1>Gestión de Estudiantes</h1>
-                            <p class="subtitle" style="text-align: left; margin-bottom: 0;">Bienvenido, ${user.username}. Aquí puedes ver y buscar a los estudiantes a tu cargo.</p>
-                        </div>
-
-                    </div>
-                </section>
+                ${this._getWelcomeHeaderHTML('Gestión de Estudiantes', `Bienvenido, ${user.username}. Aquí puedes ver y buscar a los estudiantes a tu cargo.`, badgeHTML)}
 
                 <div class="admin-controls" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center; background: var(--secondary); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--card-border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);">
                     <div class="search-box" style="flex: 1; position: relative;">
@@ -150,9 +174,7 @@ const HealthProDashboard = {
             }
 
             const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Token ${token}`
-                }
+                headers: this._getHeaders(Auth)
             });
 
             if (!response.ok) throw new Error('Error al cargar estudiantes');
@@ -224,7 +246,7 @@ const HealthProDashboard = {
             
             // 1. Fetch user detail
             const userResponse = await fetch(`/api/admin/users/${studentId}/`, {
-                headers: { 'Authorization': `Token ${token}` }
+                headers: this._getHeaders(Auth)
             });
             if (!userResponse.ok) throw new Error('Error al cargar detalle');
             const student = await userResponse.json();
@@ -317,8 +339,8 @@ const HealthProDashboard = {
 
             // 2. Fetch & Render Charts if HP
             if (isHP) {
-                this.loadAndRenderCharts(studentId, token);
-                this.loadStudentSurveys(studentId, token);
+                this.loadAndRenderCharts(studentId, Auth);
+                this.loadStudentSurveys(studentId, Auth);
             }
 
         } catch (err) {
@@ -333,36 +355,33 @@ const HealthProDashboard = {
         }
     },
 
-    async loadAndRenderCharts(studentId, token) {
+    async loadAndRenderCharts(studentId, Auth) {
         try {
+            const headers = this._getHeaders(Auth);
             // Fetch Averages
-            const avgResp = await fetch(`/api/reports/user/${studentId}/averages/`, {
-                headers: { 'Authorization': `Token ${token}` }
-            });
+            const avgResp = await fetch(`/api/reports/user/${studentId}/averages/`, { headers });
             const avgData = await avgResp.json();
 
             // Fetch Timeline
-            const tlResp = await fetch(`/api/reports/user/${studentId}/timeline/`, {
-                headers: { 'Authorization': `Token ${token}` }
-            });
+            const tlResp = await fetch(`/api/reports/user/${studentId}/timeline/`, { headers });
             const tlData = await tlResp.json();
 
             // Render 4 Charts
-            this.renderFacialAvg(avgData.facial_averages);
-            this.renderManualAvg(avgData.manual_averages);
-            this.renderFacialTimeline(tlData.facial_timeline);
-            this.renderManualTimeline(tlData.manual_timeline);
+            this.renderAvgChart(avgData.facial_averages, "#chart-facial-avg", true);
+            this.renderAvgChart(avgData.manual_averages, "#chart-manual-avg", false);
+            this.renderTimelineChart(tlData.facial_timeline, "#chart-facial-timeline", "Humor Facial", "#6ecece", "area");
+            this.renderTimelineChart(tlData.manual_timeline, "#chart-manual-timeline", "Humor Manual", "#6366f1", "line");
 
         } catch (err) {
             this._logError('Error rendering HP charts', err);
         }
     },
 
-    async loadStudentSurveys(studentId, token) {
+    async loadStudentSurveys(studentId, Auth) {
         const container = document.getElementById('hp-survey-history-container');
         try {
             const response = await fetch(`/api/reports/user/${studentId}/surveys/`, {
-                headers: { 'Authorization': `Token ${token}` }
+                headers: this._getHeaders(Auth)
             });
             if (!response.ok) throw new Error('Error al cargar encuestas');
             const surveys = await response.json();
@@ -413,9 +432,8 @@ const HealthProDashboard = {
     async openSurveyDetail(surveyId) {
         const { Auth, ProfileView } = window;
         try {
-            const token = Auth.getToken();
             const response = await fetch(`/api/surveys/${surveyId}/`, {
-                headers: { 'Authorization': `Token ${token}` }
+                headers: this._getHeaders(Auth)
             });
             if (!response.ok) throw new Error('Error al cargar detalle de la encuesta');
             const data = await response.json();
@@ -527,81 +545,56 @@ const HealthProDashboard = {
         document.body.style.overflow = 'hidden';
     },
 
-    renderFacialAvg(data) {
+    renderAvgChart(data, selector, isFacial) {
         const categories = Object.keys(data).map(k => k.charAt(0).toUpperCase() + k.slice(1));
-        const values = Object.values(data).map(v => parseFloat(v.toFixed(1)));
+        const values = Object.values(data).map(v => isFacial ? parseFloat(v.toFixed(1)) : v);
 
         const options = {
-            series: [{ name: 'Promedio (%)', data: values }],
+            series: [{ name: isFacial ? 'Promedio (%)' : 'Frecuencia', data: values }],
             chart: { type: 'bar', height: 250, background: 'transparent', toolbar: { show: false } },
-            plotOptions: { bar: { borderRadius: 4, columnWidth: '50%', distributed: true } },
+            plotOptions: { 
+                bar: { 
+                    borderRadius: 4, 
+                    columnWidth: isFacial ? '50%' : '70%', 
+                    distributed: isFacial,
+                    horizontal: !isFacial 
+                } 
+            },
             theme: { mode: 'dark' },
-            colors: ['#6ecece', '#6366f1', '#f43f5e', '#fbbf24', '#10b981', '#a855f7', '#94a3b8'],
-            xaxis: { categories: categories, labels: { style: { fontSize: '10px', fontWeight: 600 } } },
-            yaxis: { title: { text: 'Nivel Promedio (%)', style: { color: '#94a3b8' } } },
+            colors: isFacial ? ['#6ecece', '#6366f1', '#f43f5e', '#fbbf24', '#10b981', '#a855f7', '#94a3b8'] : ['#6ecece'],
+            xaxis: { categories: categories, labels: { style: { fontSize: '10px' } } },
+            yaxis: isFacial ? { title: { text: 'Promedio (%)', style: { color: '#94a3b8' } } } : {},
             legend: { show: false },
             grid: { borderColor: 'rgba(255,255,255,0.05)' },
-            tooltip: { theme: 'dark', y: { formatter: (val) => `${val}%` } }
+            tooltip: { theme: 'dark', y: { formatter: (val) => isFacial ? `${val}%` : val } }
         };
 
         const { ApexCharts } = window;
-        new ApexCharts(document.querySelector("#chart-facial-avg"), options).render();
+        new ApexCharts(document.querySelector(selector), options).render();
     },
 
-    renderManualAvg(data) {
-        const categories = Object.keys(data).map(k => k.charAt(0).toUpperCase() + k.slice(1));
-        const values = Object.values(data);
-
-        const options = {
-            series: [{ name: 'Frecuencia', data: values }],
-            chart: { type: 'bar', height: 250, background: 'transparent', toolbar: { show: false } },
-            plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-            dataLabels: { enabled: false },
-            theme: { mode: 'dark' },
-            colors: ['#6ecece'],
-            xaxis: { categories: categories, labels: { style: { fontSize: '10px' } } },
-            grid: { borderColor: 'rgba(255,255,255,0.05)' }
-        };
-
-        const { ApexCharts } = window;
-        new ApexCharts(document.querySelector("#chart-manual-avg"), options).render();
-    },
-
-    renderFacialTimeline(data) {
-        // Map emotion to value for timeline
-        const emotionMap = { 
-            'feliz': 5, 'felicidad': 5, 'happiness': 5,
-            'neutral': 4, 
-            'sorpresa': 3, 'surprise': 3,
-            'triste': 2, 'tristeza': 2, 'sadness': 2,
-            'miedo': 1, 'fear': 1,
-            'enojado': 0, 'enojo': 0, 'ira': 0, 'anger': 0,
-            'disgusto': 0, 'disgust': 0
-        };
-        const reverseMap = ['Enojado', 'Miedo', 'Triste', 'Sorpresa', 'Neutral', 'Feliz'];
-        
+    renderTimelineChart(data, selector, name, color, type) {
         const seriesData = data.map(item => ({
             x: new Date(item.timestamp).getTime(),
-            y: emotionMap[item.emotion.toLowerCase()] ?? 0,
+            y: this._emotionMap[item.emotion.toLowerCase()] ?? 0,
             emotion: item.emotion
         }));
 
         const options = {
-            series: [{ name: 'Humor Facial', data: seriesData }],
-            chart: { type: 'area', height: 250, background: 'transparent', toolbar: { show: false } },
+            series: [{ name: name, data: seriesData }],
+            chart: { type: type, height: 250, background: 'transparent', toolbar: { show: false } },
             theme: { mode: 'dark' },
-            colors: ['#6ecece'],
+            colors: [color],
             dataLabels: { enabled: false },
             stroke: { curve: 'smooth', width: 3 },
-            fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.1, stops: [20, 100] } },
+            fill: type === 'area' ? { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.1, stops: [20, 100] } } : {},
+            markers: type === 'line' ? { size: 5, strokeWidth: 0, hover: { size: 7 } } : {},
             xaxis: { type: 'datetime', labels: { datetimeUTC: false, style: { fontSize: '10px' } } },
             yaxis: { 
-                min: 0, 
-                max: 5, 
-                tickAmount: 5,
+                min: 0, max: 5, tickAmount: 5,
                 labels: { 
                     offsetY: 2,
-                    formatter: (val) => reverseMap[Math.round(val)] || '',
+                    formatter: (val) => this._reverseMap[Math.round(val)] || '',
                     style: { fontSize: '10px', colors: ['#94a3b8'], fontWeight: 600 }
                 } 
             },
@@ -610,51 +603,7 @@ const HealthProDashboard = {
         };
 
         const { ApexCharts } = window;
-        new ApexCharts(document.querySelector("#chart-facial-timeline"), options).render();
-    },
-
-    renderManualTimeline(data) {
-        const emotionMap = { 
-            'feliz': 5, 'felicidad': 5, 'happiness': 5,
-            'neutral': 4, 
-            'sorpresa': 3, 'surprise': 3,
-            'triste': 2, 'tristeza': 2, 'sadness': 2,
-            'miedo': 1, 'fear': 1,
-            'enojado': 0, 'enojo': 0, 'ira': 0, 'anger': 0,
-            'disgusto': 0, 'disgust': 0
-        };
-        const reverseMap = ['Enojado', 'Miedo', 'Triste', 'Sorpresa', 'Neutral', 'Feliz'];
-
-        const seriesData = data.map(item => ({
-            x: new Date(item.timestamp).getTime(),
-            y: emotionMap[item.emotion.toLowerCase()] ?? 0,
-            emotion: item.emotion
-        }));
-
-        const options = {
-            series: [{ name: 'Humor Manual', data: seriesData }],
-            chart: { type: 'line', height: 250, background: 'transparent', toolbar: { show: false } },
-            theme: { mode: 'dark' },
-            colors: ['#6366f1'],
-            markers: { size: 5, strokeWidth: 0, hover: { size: 7 } },
-            stroke: { width: 3 },
-            xaxis: { type: 'datetime', labels: { datetimeUTC: false, style: { fontSize: '10px' } } },
-            yaxis: { 
-                min: 0, 
-                max: 5, 
-                tickAmount: 5,
-                labels: { 
-                    offsetY: 2,
-                    formatter: (val) => reverseMap[Math.round(val)] || '',
-                    style: { fontSize: '10px', colors: ['#94a3b8'], fontWeight: 600 }
-                } 
-            },
-            tooltip: { x: { format: 'dd MMM HH:mm' }, y: { formatter: (val, { seriesIndex, dataPointIndex, w }) => w.config.series[seriesIndex].data[dataPointIndex].emotion } },
-            grid: { borderColor: 'rgba(255,255,255,0.05)' }
-        };
-
-        const { ApexCharts } = window;
-        new ApexCharts(document.querySelector("#chart-manual-timeline"), options).render();
+        new ApexCharts(document.querySelector(selector), options).render();
     },
 
     setupEventListeners(appInstance) {

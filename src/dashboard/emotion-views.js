@@ -1,6 +1,49 @@
 const EmotionViews = {
+    _timelineMaps: {
+        dbId: {
+            'feliz': 1, 'felicidad': 1, 'triste': 2, 'tristeza': 2,
+            'desagrado': 3, 'disgusto': 3, 'ira': 4, 'enojado': 4,
+            'sorpresa': 5, 'miedo': 6, 'neutral': 7
+        },
+        visual: { 1: 7, 5: 6, 6: 5, 7: 4, 4: 3, 3: 2, 2: 1 },
+        names: { 7: 'Felicidad', 6: 'Sorpresa', 5: 'Miedo', 4: 'Neutral', 3: 'Ira', 2: 'Desagrado', 1: 'Tristeza' }
+    },
+
     _logError(msg, err) {
         console.error(`[EmotionViews] ${msg}`, err);
+    },
+
+    _getHeaders(Auth) {
+        return { 'Authorization': `Token ${Auth.getToken()}` };
+    },
+
+    _getSortedCauses(causes) {
+        return [...causes].sort((a, b) => {
+            const nameA = a.Cause.toLowerCase();
+            const nameB = b.Cause.toLowerCase();
+            if (nameA.includes('otra')) return 1;
+            if (nameB.includes('otra')) return -1;
+            return nameA.localeCompare(nameB);
+        });
+    },
+
+    _getRegisterLayoutHTML(title, subtitle, extraHTML, backBtnId = null) {
+        const emotions = this.getEmotionsData();
+        return `
+            <div class="dashboard-container">
+                <section class="welcome-section">
+                    <div class="welcome-header">
+                        <div class="welcome-text">
+                            <h1>${title}</h1>
+                            <p class="subtitle" style="text-align: left;">${subtitle}</p>
+                        </div>
+                        ${backBtnId ? `<div class="welcome-actions">${this.getBackButtonHTML(backBtnId)}</div>` : ''}
+                    </div>
+                </section>
+                ${this.getEmotionGridHTML(emotions)}
+                ${extraHTML}
+            </div>
+        `;
     },
 
     getBackButtonHTML(id) {
@@ -145,14 +188,7 @@ const EmotionViews = {
     },
 
     getCausesSelectionHTML(causes) {
-        // Ordenar causas: "Otra" al final
-        const sortedCauses = [...causes].sort((a, b) => {
-            const nameA = a.Cause.toLowerCase();
-            const nameB = b.Cause.toLowerCase();
-            if (nameA.includes('otra')) return 1;
-            if (nameB.includes('otra')) return -1;
-            return nameA.localeCompare(nameB);
-        });
+        const sortedCauses = this._getSortedCauses(causes);
 
         return `
             <div class="step-container fade-in" id="step-causes" style="display: none; margin-top: 3rem;">
@@ -374,8 +410,7 @@ const EmotionViews = {
 
     async initCharts(userId) {
         const { Auth } = window;
-        const token = Auth.getToken();
-        const headers = { 'Authorization': `Token ${token}` };
+        const headers = this._getHeaders(Auth);
 
         try {
             // Fetch Timeline Data
@@ -395,38 +430,7 @@ const EmotionViews = {
     },
 
     renderTimeline(rawData, selector, name, color) {
-        // IDs reales de la base de datos
-        const dbIdMap = {
-            'feliz': 1, 'felicidad': 1,
-            'triste': 2, 'tristeza': 2,
-            'desagrado': 3, 'disgusto': 3,
-            'ira': 4, 'enojado': 4,
-            'sorpresa': 5,
-            'miedo': 6,
-            'neutral': 7
-        };
-
-        // Mapeo Visual (Y-axis): 7 es arriba, 1 es abajo
-        const visualMap = {
-            1: 7, // Felicidad -> Top
-            5: 6, // Sorpresa
-            6: 5, // Miedo
-            7: 4, // Neutral -> Center
-            4: 3, // Ira
-            3: 2, // Desagrado
-            2: 1  // Tristeza -> Bottom
-        };
-
-        // Nombres para mostrar en el eje Y según la posición visual
-        const visualNames = { 
-            7: 'Felicidad', 
-            6: 'Sorpresa', 
-            5: 'Miedo', 
-            4: 'Neutral', 
-            3: 'Ira', 
-            2: 'Desagrado',
-            1: 'Tristeza'
-        };
+        const { dbId: dbIdMap, visual: visualMap, names: visualNames } = this._timelineMaps;
 
         const data = (rawData || []).map(item => {
             const dbId = dbIdMap[item.emotion.toLowerCase()] || 0;
@@ -480,10 +484,9 @@ const EmotionViews = {
 
     async checkLastRegistration() {
         const { Auth } = window;
-        const token = Auth.getToken();
         try {
             const response = await fetch('/api/emotion/register/', {
-                headers: { 'Authorization': `Token ${token}` }
+                headers: this._getHeaders(Auth)
             });
             if (response.ok) {
                 const data = await response.json();
@@ -525,46 +528,21 @@ const EmotionViews = {
 
     async renderRegister(container, appInstance) {
         const restriction = await this.checkLastRegistration();
-        
-        if (!restriction.canRegister) {
-            this.renderLocked(container, restriction.remaining, appInstance);
-            return;
-        }
+        if (!restriction.canRegister) return this.renderLocked(container, restriction.remaining, appInstance);
 
-        const emotions = this.getEmotionsData();
-        const token = window.Auth.getToken();
-        const causes = await this.fetchCauses(token);
+        const { Auth } = window;
+        const causes = await this.fetchCauses(Auth.getToken());
+        const sortedCauses = this._getSortedCauses(causes);
 
-        // Ordenar causas para consistencia
-        const sortedCauses = [...causes].sort((a, b) => {
-            const nameA = a.Cause.toLowerCase();
-            const nameB = b.Cause.toLowerCase();
-            if (nameA.includes('otra')) return 1;
-            if (nameB.includes('otra')) return -1;
-            return nameA.localeCompare(nameB);
-        });
-
-        container.innerHTML = `
-            <div class="dashboard-container">
-                <section class="welcome-section">
-                    <div class="welcome-header">
-                        <div class="welcome-text">
-                            <h1>Registro emocional</h1>
-                            <p class="subtitle" style="text-align: left;">Selecciona la emoción que mejor represente cómo te sientes en este momento.</p>
-                        </div>
-                        <div class="welcome-actions">
-                            ${this.getBackButtonHTML("back-to-dash-reg")}
-                        </div>
-                    </div>
-                </section>
-
-                ${this.getEmotionGridHTML(emotions)}
-                <div id="extra-steps-container">
-                    ${this.getEnergySelectionHTML()}
-                    ${this.getCausesSelectionHTML(sortedCauses)}
-                </div>
-            </div>
-        `;
+        container.innerHTML = this._getRegisterLayoutHTML(
+            'Registro emocional',
+            'Selecciona la emoción que mejor represente cómo te sientes en este momento.',
+            `<div id="extra-steps-container">
+                ${this.getEnergySelectionHTML()}
+                ${this.getCausesSelectionHTML(sortedCauses)}
+            </div>`,
+            'back-to-dash-reg'
+        );
 
         document.getElementById('back-to-dash-reg').addEventListener('click', () => {
             appInstance.renderDashboard();
@@ -664,11 +642,9 @@ const EmotionViews = {
      */
     async checkNeedsEmotionRegistration() {
         const { Auth } = window;
-        const token = Auth.getToken();
-        if (!token) return false; // Not logged in, skip
         try {
             const response = await fetch('/api/emotion/register/', {
-                headers: { 'Authorization': `Token ${token}` }
+                headers: this._getHeaders(Auth)
             });
             if (!response.ok) return false;
 
@@ -693,41 +669,18 @@ const EmotionViews = {
      * No "back" button — the user MUST register before proceeding.
      */
     async renderMandatoryRegister(container, appInstance) {
-        const emotions = this.getEmotionsData();
         const { Auth } = window;
-        const token = Auth.getToken();
-        const causes = await this.fetchCauses(token);
+        const causes = await this.fetchCauses(Auth.getToken());
+        const sortedCauses = this._getSortedCauses(causes);
 
-        // Ordenar causas para consistencia
-        const sortedCauses = [...causes].sort((a, b) => {
-            const nameA = a.Cause.toLowerCase();
-            const nameB = b.Cause.toLowerCase();
-            if (nameA.includes('otra')) return 1;
-            if (nameB.includes('otra')) return -1;
-            return nameA.localeCompare(nameB);
-        });
-
-        container.innerHTML = `
-            <div class="dashboard-container">
-                <section class="welcome-section">
-                    <div class="welcome-header">
-                        <div class="welcome-text">
-                            <h1>¿Cómo te sientes hoy?</h1>
-                            <p class="subtitle" style="text-align: left;">
-                                Han pasado más de 24 horas desde tu último registro emocional.
-                                Selecciona la emoción que mejor represente cómo te sientes ahora para continuar.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                ${this.getEmotionGridHTML(emotions)}
-                <div id="extra-steps-container">
-                    ${this.getEnergySelectionHTML()}
-                    ${this.getCausesSelectionHTML(sortedCauses)}
-                </div>
-            </div>
-        `;
+        container.innerHTML = this._getRegisterLayoutHTML(
+            '¿Cómo te sientes hoy?',
+            'Han pasado más de 24 horas desde tu último registro emocional. Selecciona la emoción que mejor represente cómo te sientes ahora para continuar.',
+            `<div id="extra-steps-container">
+                ${this.getEnergySelectionHTML()}
+                ${this.getCausesSelectionHTML(sortedCauses)}
+            </div>`
+        );
 
         this.bindSequentialFlow(container, appInstance, sortedCauses);
     }
