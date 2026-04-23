@@ -205,10 +205,18 @@ const HealthProDashboard = {
         }
 
         emptyMsg.style.display = 'none';
-        tbody.innerHTML = students.map(student => `
-            <tr class="student-row" onclick="HealthProDashboard.showStudentDetail(${student.id})">
+        tbody.innerHTML = students.map(student => {
+            const hasAlert = student.has_alert;
+            const rowStyle = hasAlert ? 'background: rgba(234, 179, 8, 0.15); border-left: 4px solid #eab308;' : '';
+            const alertIcon = hasAlert ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px; vertical-align: middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` : '';
+            
+            return `
+            <tr class="student-row" onclick="HealthProDashboard.showStudentDetail(${student.id})" style="${rowStyle}">
                 <td style="padding: 1.25rem 1.5rem;">
-                    <div style="font-weight: 600; color: #fff;">${student.first_name} ${student.last_name}</div>
+                    <div style="font-weight: 600; color: #fff; display: flex; align-items: center;">
+                        ${student.first_name} ${student.last_name}
+                        ${alertIcon}
+                    </div>
                 </td>
                 <td style="padding: 1.25rem 1.5rem;">
                     <div style="color: #94a3b8; font-size: 0.9rem;">${student.email}</div>
@@ -221,7 +229,7 @@ const HealthProDashboard = {
                     <div style="color: var(--primary); font-size: 0.75rem; opacity: 0.8;">${student.faculty || ''}</div>
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     },
 
     async showStudentDetail(studentId) {
