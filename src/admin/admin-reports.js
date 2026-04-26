@@ -112,9 +112,19 @@ const AdminReports = {
             printDateSpan.textContent = now.toLocaleDateString('es-ES', options);
         }
 
+        const originalTitle = document.title;
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        const fileDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+        document.title = `Graficas_Bienestar_AURA_${fileDateStr}`;
+
         // Small delay to ensure DOM update before printing
         setTimeout(() => {
             window.print();
+            // Restaura el título original después de imprimir
+            setTimeout(() => {
+                document.title = originalTitle;
+            }, 1000);
         }, 300);
     },
 
@@ -390,7 +400,9 @@ const AdminReports = {
         addSection("Resumen de Reconocimientos Faciales", '#table-facial-emotions', [248, 113, 113]);
         addSection("Resumen de Encuestas MBI-SS", '#table-survey-stats', [167, 139, 250]);
 
-        doc.save('reporte_general_plataforma.pdf');
+        const pad = (n) => n.toString().padStart(2, '0');
+        const fileDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+        doc.save(`reporte_general_plataforma_${fileDateStr}.pdf`);
     },
 
     renderBarChart(dataObj, selector, name, color) {
