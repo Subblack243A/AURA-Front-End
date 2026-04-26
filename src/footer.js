@@ -15,7 +15,7 @@ const Footer = {
                             <div class="university-brand">
                                 <img src="/assets/escudo-color.png" alt="Escudo Universidad de Cundinamarca" class="university-logo">
                                 <div class="brand-text">
-                                    <span class="app-name">AURA v1.0.0</span>
+                                    <span class="app-name" id="app-version-footer">AURA</span>
                                     <p class="academic-project">Proyecto de grado para la obtención del título en <strong>Ing. de Sistemas y Computación</strong></p>
                                     <p class="university-info">Universidad de Cundinamarca Extensión Facatativá, Facultad de Ingeniería | 2026</p>
                                 </div>
@@ -64,6 +64,14 @@ const Footer = {
                 </div>
             </footer>
         `;
+
+        fetch('/version.json')
+            .then(res => res.json())
+            .then(data => {
+                const versionSpan = document.getElementById('app-version-footer');
+                if (versionSpan) versionSpan.textContent = `AURA v${data.version}`;
+            })
+            .catch(err => console.error('Error cargando la versión de la aplicación:', err));
     }
 };
 

@@ -905,7 +905,7 @@ const UserViews = {
                 console.log('Biometric registration/login successful');
 
                 window.CameraHandler.stop();
-                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.`);
+                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.\n\nYa has sido asignado a un profesional de la salud que estará acompañándote.`);
 
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
