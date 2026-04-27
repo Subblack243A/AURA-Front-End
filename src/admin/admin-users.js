@@ -1,7 +1,9 @@
 const AdminUsers = {
     allUsers: [],
+    inactiveUsers: [],
     roles: [],
     healthPros: [],
+    currentTab: 'active',
 
     async render(appContainer, app) {
         appContainer.innerHTML = `
@@ -11,6 +13,11 @@ const AdminUsers = {
                         Administración de Usuarios
                     </h1>
                     <p class="subtitle">Gestiona las solicitudes de cuenta y el directorio de usuarios.</p>
+                </div>
+
+                <div class="tabs-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                    <button class="tab-btn active" data-tab="active" style="background: none; border: none; color: var(--primary); font-size: 1rem; font-weight: 600; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary); transition: all 0.3s;">Usuarios Activos / Pendientes</button>
+                    <button class="tab-btn" data-tab="inactive" style="background: none; border: none; color: #94a3b8; font-size: 1rem; font-weight: 600; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.3s;">Cuentas Inactivas (>24h)</button>
                 </div>
 
                 <div class="search-container" style="margin-bottom: 2rem; position: relative;">
@@ -134,22 +141,51 @@ const AdminUsers = {
                 .user-row:hover {
                     background: rgba(110, 206, 210, 0.05) !important;
                 }
+                .tab-btn:hover {
+                    color: #fff !important;
+                }
             </style>
         `;
 
         document.getElementById('back-to-admin-dashboard').addEventListener('click', () => app.renderAdminDashboard());
         document.getElementById('close-reactivation-modal').addEventListener('click', () => this.hideReactivationModal());
         
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', async (e) => {
+                tabs.forEach(t => { t.classList.remove('active'); t.style.color = '#94a3b8'; t.style.borderBottomColor = 'transparent'; });
+                const current = e.target;
+                current.classList.add('active');
+                current.style.color = 'var(--primary)';
+                current.style.borderBottomColor = 'var(--primary)';
+                
+                this.currentTab = current.getAttribute('data-tab');
+                const searchInput = document.getElementById('search-users');
+                if (searchInput) searchInput.value = ''; // clear search
+                
+                if (this.currentTab === 'active') {
+                    this.renderUsers(this.allUsers);
+                } else {
+                    await this.fetchInactiveUsers();
+                }
+            });
+        });
+
         const searchInput = document.getElementById('search-users');
         searchInput.addEventListener('input', (e) => {
             const term = e.target.value.toLowerCase();
-            const filtered = this.allUsers.filter(u => 
+            const sourceList = this.currentTab === 'active' ? this.allUsers : this.inactiveUsers;
+            const filtered = sourceList.filter(u => 
                 u.first_name.toLowerCase().includes(term) || 
                 u.last_name.toLowerCase().includes(term) || 
                 u.email.toLowerCase().includes(term) || 
                 u.role.toLowerCase().includes(term)
             );
-            this.renderUsers(filtered);
+            if (this.currentTab === 'active') {
+                this.renderUsers(filtered);
+            } else {
+                this.renderInactiveUsers(filtered);
+            }
         });
 
         await this.fetchUsers();
@@ -254,6 +290,96 @@ const AdminUsers = {
         if (r === 'profesional de la salud' || r === 'prof. de salud') return 'role-badge-health';
         if (r === 'pendiente') return 'role-badge-pending';
         return 'role-badge-default';
+    },
+
+    async fetchInactiveUsers() {
+        const token = window.Auth.getToken();
+        try {
+            const tbody = document.getElementById('users-table-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;"><span class="spinner" style="border-color: rgba(255,255,255,0.3); border-top-color: #fff; width: 20px; height: 20px;"></span> Cargando cuentas inactivas...</td></tr>';
+            
+            const response = await fetch('/api/admin/users/inactive/', {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (!response.ok) throw new Error('Error al cargar cuentas inactivas.');
+            this.inactiveUsers = await response.json();
+            this.renderInactiveUsers(this.inactiveUsers);
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+        }
+    },
+
+    renderInactiveUsers(users) {
+        const tbody = document.getElementById('users-table-body');
+        if (!tbody) return;
+
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem; color: #94a3b8;">No hay cuentas inactivas registradas hace más de 24 horas.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = users.map(user => {
+            const joinedDate = new Date(user.date_joined).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            return `
+                <tr class="user-row" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1.2rem 1rem; color: #fff; font-weight: 500;">${user.first_name} ${user.last_name}</td>
+                    <td style="padding: 1.2rem 1rem; color: #94a3b8;">${user.email}</td>
+                    <td style="padding: 1.2rem 1rem;">
+                        <span class="role-badge ${this.getRoleClass(user.role)}">${window.Auth.formatRole(user.role)}</span>
+                    </td>
+                    <td style="padding: 1.2rem 1rem; color: #94a3b8; font-size: 0.9rem;">
+                        Registrado: <br> ${joinedDate}
+                    </td>
+                    <td style="padding: 1.2rem 1rem; text-align: right;">
+                        <button class="secondary-btn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-right: 0.5rem;" onclick="event.stopPropagation(); AdminUsers.resendOtpToInactive('${user.email}', this)">Reenviar OTP</button>
+                        <button class="primary-btn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; background: #ef4444; border: none;" onclick="event.stopPropagation(); AdminUsers.deleteInactiveUser('${user.id}', '${user.email}')">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    },
+
+    async resendOtpToInactive(email, btn) {
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner" style="width: 12px; height: 12px; border-color: rgba(110,206,210,0.3); border-top-color: var(--primary);"></span>`;
+        try {
+            await window.Auth.resendOTP(email);
+            this.showNotification(`OTP reenviado a ${email}`, 'success');
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    },
+
+    async deleteInactiveUser(userId, email) {
+        if (!confirm(`¿Estás seguro de que deseas ELIMINAR permanentemente la cuenta inactiva de ${email}?`)) return;
+        
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch(`/api/admin/users/${userId}/`, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': `Token ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Error al eliminar usuario');
+            }
+
+            this.showNotification('Cuenta inactiva eliminada permanentemente.', 'success');
+            await this.fetchInactiveUsers();
+        } catch (err) {
+            console.error(err);
+            this.showNotification(err.message, 'error');
+        }
     },
 
     async approveUser(userId, btn) {

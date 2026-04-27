@@ -123,12 +123,42 @@ const ProfileView = {
         `;
 
         document.getElementById('btn-cancel-otp').addEventListener('click', () => this.showViewState());
-        document.getElementById('btn-verify-otp').addEventListener('click', () => {
+        document.getElementById('btn-verify-otp').addEventListener('click', async () => {
             const otpCode = document.getElementById('profile_otp').value;
+            const error = document.getElementById('otp-error');
+            const verifyBtn = document.getElementById('btn-verify-otp');
+            
             if (otpCode.length === 6) {
-                this.showEditState(otpCode);
+                this.app.setLoading(true);
+                verifyBtn.disabled = true;
+                const token = window.Auth.getToken();
+                
+                try {
+                    const response = await fetch('/api/profile/verify-otp/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Token ${token}`
+                        },
+                        body: JSON.stringify({ otp_code: otpCode })
+                    });
+                    
+                    if (response.ok) {
+                        error.style.display = 'none';
+                        this.showEditState(otpCode);
+                    } else {
+                        const err = await response.json();
+                        error.textContent = err.error || 'Código incorrecto';
+                        error.style.display = 'block';
+                    }
+                } catch (e) {
+                    error.textContent = 'Error de conexión. Intente de nuevo.';
+                    error.style.display = 'block';
+                } finally {
+                    this.app.setLoading(false);
+                    verifyBtn.disabled = false;
+                }
             } else {
-                const error = document.getElementById('otp-error');
                 error.textContent = 'Ingrese un código de 6 dígitos';
                 error.style.display = 'block';
             }
@@ -194,9 +224,12 @@ const ProfileView = {
                             <input type="hidden" id="edit_faculty" value="${user.faculty}">
                         </div>
                     </div>
-                    <div class="profile-actions">
+                    <div class="profile-actions" style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button type="submit" class="btn-primary">Guardar Cambios</button>
                         <button type="button" id="btn-cancel-edit" class="btn-secondary">Cancelar</button>
+                        ${user.role === 'Estudiante' ? `
+                            <button type="button" id="btn-deactivate-account" class="btn-primary" style="background: #ef4444; border: none; margin-left: auto;">Desactivar mi cuenta</button>
+                        ` : ''}
                     </div>
                 </form>
             </div>
@@ -218,6 +251,13 @@ const ProfileView = {
             e.preventDefault();
             this.saveChanges(otpCode);
         });
+
+        if (user.role === 'Estudiante') {
+            const deactivateBtn = document.getElementById('btn-deactivate-account');
+            if (deactivateBtn) {
+                deactivateBtn.addEventListener('click', () => this.deactivateAccount(otpCode));
+            }
+        }
     },
 
     async saveChanges(otpCode) {
@@ -250,6 +290,43 @@ const ProfileView = {
             } else {
                 const err = await response.json();
                 throw new Error(err.error || 'Error al actualizar el perfil');
+            }
+        } catch (err) {
+            this.app.showError(err.message);
+        } finally {
+            this.app.setLoading(false);
+        }
+    },
+
+    async deactivateAccount(otpCode) {
+        if (!confirm('¿Estás SEGURO de que deseas desactivar tu cuenta? Perderás acceso al sistema inmediatamente y un administrador tendrá que reactivarte.')) return;
+        
+        this.app.setLoading(true);
+        const token = window.Auth.getToken();
+        
+        try {
+            const response = await fetch('/api/profile/update/', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Token ${token}`
+                },
+                body: JSON.stringify({
+                    otp_code: otpCode,
+                    deactivate: true
+                })
+            });
+
+            if (response.ok) {
+                alert('Tu cuenta ha sido desactivada exitosamente.');
+                if (window.Auth && window.Auth.logout) {
+                    window.Auth.logout();
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                const err = await response.json();
+                throw new Error(err.error || 'Error al desactivar la cuenta');
             }
         } catch (err) {
             this.app.showError(err.message);
