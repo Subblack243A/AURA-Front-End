@@ -24,7 +24,7 @@ const UserViews = {
                         <button id="landing-login-btn" class="primary-btn" style="padding: 1rem;">Iniciar Sesión</button>
                         <button id="landing-register-btn" class="secondary-btn" style="padding: 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff;">Crear una Cuenta</button>
                         <div style="margin-top: 0.5rem; text-align: center;">
-                            <button id="landing-health-pro-btn" class="link-btn" style="color: var(--primary); font-weight: 600; font-size: 1rem;">Soy Profesional de la Salud</button>
+                            <button id="landing-health-pro-btn" class="link-btn" style="color: var(--primary); font-weight: 600; font-size: 1rem;">Quiero Hacer parte de AURA</button>
                         </div>
                     </div>
                 </div>
@@ -144,7 +144,7 @@ const UserViews = {
                 app.setLoading(false);
             }
         });
-        
+
         document.getElementById('forgot-password-link').addEventListener('click', () => {
             if (app.renderForgotEmail) app.renderForgotEmail();
             else UserViews.renderForgotEmail(app);
@@ -172,7 +172,7 @@ const UserViews = {
                 <button class="secondary-btn" id="back-to-landing-from-deactivated">Volver al Inicio</button>
             </div>
         `;
-        
+
         document.getElementById('back-to-landing-from-deactivated').addEventListener('click', () => app.renderLandingPage());
     },
 
@@ -196,7 +196,7 @@ const UserViews = {
                 <button class="secondary-btn" id="pending-back-btn">Volver al Inicio</button>
             </div>
         `;
-        
+
         document.getElementById('pending-back-btn').addEventListener('click', () => app.renderLandingPage());
     },
 
@@ -265,7 +265,7 @@ const UserViews = {
             countdown = 90;
             resendBtn.disabled = true;
             if (timerId) clearInterval(timerId);
-            
+
             timerId = setInterval(() => {
                 countdown--;
                 if (countdown <= 0) {
@@ -586,6 +586,35 @@ const UserViews = {
                 return;
             }
 
+            const dateOfBirthInput = document.getElementById('DateOfBirth');
+            const dateOfBirthValue = dateOfBirthInput.value;
+            if (!dateOfBirthValue) {
+                app.showError('Por favor ingresa tu fecha de nacimiento.', false);
+                app.setLoading(false);
+                return;
+            }
+
+            const dob = new Date(dateOfBirthValue);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const m = today.getMonth() - dob.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            if (age < 10) {
+                dateOfBirthInput.classList.add('input-error');
+                const dobLabel = document.querySelector('label[for="DateOfBirth"]');
+                if (dobLabel) dobLabel.classList.add('label-error');
+                app.showError('Debes tener al menos 10 años de edad para registrarte.', false);
+                app.setLoading(false);
+                return;
+            } else {
+                dateOfBirthInput.classList.remove('input-error');
+                const dobLabel = document.querySelector('label[for="DateOfBirth"]');
+                if (dobLabel) dobLabel.classList.remove('label-error');
+            }
+
             const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
             const passwordInput = document.getElementById('password');
             const passwordLabel = document.querySelector('label[for="password"]');
@@ -632,19 +661,19 @@ const UserViews = {
                 // Step 1: Account creation (JSON)
                 await window.Auth.register(userData);
                 console.log('Registration successful, redirecting to OTP');
-                
+
                 // Step 2: Show OTP Verification (pass full userData for possible correction)
                 UserViews.renderOTPVerification(app, userData);
             } catch (err) {
                 console.error('Registration failed:', err);
-                
+
                 // Check if it's the specific "user already exists" error
                 if (err.message && err.message.includes('USER_ALREADY_EXISTS')) {
                     app.showError('Este usuario ya tiene una cuenta activa. Por favor, inicia sesión.', false);
                 } else if (err.message && (err.message.includes('email:') || err.message.includes('username:'))) {
                     // Extract the message after the field name prefix
-                    const msg = err.message.includes('email:') ? 
-                        err.message.split('email: ')[1] : 
+                    const msg = err.message.includes('email:') ?
+                        err.message.split('email: ')[1] :
                         err.message.split('username: ')[1];
                     app.showError(msg.split('.')[0] || msg, false); // take first sentence/part
                 } else {
@@ -700,7 +729,7 @@ const UserViews = {
             countdown = 90;
             resendBtn.disabled = true;
             if (timerId) clearInterval(timerId);
-            
+
             timerId = setInterval(() => {
                 countdown--;
                 if (countdown <= 0) {
@@ -782,7 +811,7 @@ const UserViews = {
                 console.log('Verifying OTP for:', email);
                 await window.Auth.verifyOTP(email, otpCode);
                 console.log('OTP verified, redirecting to Face Capture');
-                
+
                 if (timerId) clearInterval(timerId);
                 // Success: Move to mandatory face capture (Step 3)
                 UserViews.renderFaceCaptureForRegistration(app, email, password);
@@ -826,7 +855,7 @@ const UserViews = {
         const captureStep = document.getElementById('capture-step');
         const confirmStep = document.getElementById('confirm-step');
         const capturedPreview = document.getElementById('captured-preview');
-        
+
         const captureBtn = document.getElementById('capture-btn');
         const confirmBtn = document.getElementById('confirm-register-btn');
         const retryBtn = document.getElementById('retry-capture');
@@ -842,7 +871,7 @@ const UserViews = {
             const imageFile = await window.CameraHandler.capturePhoto();
             if (imageFile) {
                 capturedImageBlob = imageFile;
-                
+
                 // Show preview
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -874,10 +903,10 @@ const UserViews = {
                 // Since this is the first login, backend will register the face embedding.
                 const loginData = await window.Auth.login(email, password, capturedImageBlob);
                 console.log('Biometric registration/login successful');
-                
+
                 window.CameraHandler.stop();
-                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.`);
-                
+                alert(`¡Bienvenido a Aura, ${loginData.username}! Registro completado con éxito.\n\nYa has sido asignado a un profesional de la salud que estará acompañándote.`);
+
                 if (window.Navbar) window.Navbar.update();
                 app.renderDashboard();
             } catch (err) {
