@@ -555,7 +555,7 @@ const HealthProDashboard = {
 
     renderAvgChart(data, selector, isFacial) {
         const categories = Object.keys(data).map(k => k.charAt(0).toUpperCase() + k.slice(1));
-        const values = Object.values(data).map(v => isFacial ? parseFloat(v.toFixed(1)) : v);
+        const values = Object.values(data).map(v => parseFloat(Number(v).toFixed(2)));
 
         const options = {
             series: [{ name: isFacial ? 'Promedio (%)' : 'Frecuencia', data: values }],
@@ -568,13 +568,22 @@ const HealthProDashboard = {
                     horizontal: !isFacial 
                 } 
             },
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) {
+                    return isFacial ? Number(val).toFixed(2) + '%' : Number(val).toFixed(2);
+                },
+                style: {
+                    fontSize: '10px'
+                }
+            },
             theme: { mode: 'dark' },
             colors: isFacial ? ['#6ecece', '#6366f1', '#f43f5e', '#fbbf24', '#10b981', '#a855f7', '#94a3b8'] : ['#6ecece'],
             xaxis: { categories: categories, labels: { style: { fontSize: '10px' } } },
             yaxis: isFacial ? { title: { text: 'Promedio (%)', style: { color: '#94a3b8' } } } : {},
             legend: { show: false },
             grid: { borderColor: 'rgba(255,255,255,0.05)' },
-            tooltip: { theme: 'dark', y: { formatter: (val) => isFacial ? `${val}%` : val } }
+            tooltip: { theme: 'dark', y: { formatter: (val) => isFacial ? `${Number(val).toFixed(2)}%` : Number(val).toFixed(2) } }
         };
 
         const { ApexCharts } = window;
