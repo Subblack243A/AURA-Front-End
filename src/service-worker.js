@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aura-cache-v7';
+const CACHE_NAME = 'aura-cache-v8';
 const urlsToCache = [
     '/',
     '/login-register/login-register.html',
