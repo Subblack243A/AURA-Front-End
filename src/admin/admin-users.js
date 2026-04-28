@@ -15,9 +15,9 @@ const AdminUsers = {
                     <p class="subtitle">Gestiona las solicitudes de cuenta y el directorio de usuarios.</p>
                 </div>
 
-                <div class="tabs-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
-                    <button class="tab-btn active" data-tab="active" style="background: none; border: none; color: var(--primary); font-size: 1rem; font-weight: 600; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid var(--primary); transition: all 0.3s;">Usuarios Activos / Pendientes</button>
-                    <button class="tab-btn" data-tab="inactive" style="background: none; border: none; color: #94a3b8; font-size: 1rem; font-weight: 600; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.3s;">Cuentas Inactivas (>24h)</button>
+                <div class="tabs-container" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 0.5rem;">
+                    <button class="tab-btn active" data-tab="active" style="background: none; border: none; color: var(--primary); font-size: 1.1rem; font-weight: 800; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 3px solid var(--primary); transition: all 0.3s;">Usuarios Activos / Pendientes</button>
+                    <button class="tab-btn" data-tab="inactive" style="background: none; border: none; color: #64748b; font-size: 1.1rem; font-weight: 800; cursor: pointer; padding: 0.5rem 1rem; border-bottom: 3px solid transparent; transition: all 0.3s;">Cuentas Inactivas (>24h)</button>
                 </div>
 
                 <div class="search-container" style="margin-bottom: 2rem; position: relative;">
@@ -142,7 +142,7 @@ const AdminUsers = {
                     background: rgba(110, 206, 210, 0.05) !important;
                 }
                 .tab-btn:hover {
-                    color: #fff !important;
+                    color: var(--secondary) !important;
                 }
             </style>
         `;
@@ -153,7 +153,7 @@ const AdminUsers = {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
             tab.addEventListener('click', async (e) => {
-                tabs.forEach(t => { t.classList.remove('active'); t.style.color = '#94a3b8'; t.style.borderBottomColor = 'transparent'; });
+                tabs.forEach(t => { t.classList.remove('active'); t.style.color = '#64748b'; t.style.borderBottomColor = 'transparent'; });
                 const current = e.target;
                 current.classList.add('active');
                 current.style.color = 'var(--primary)';
