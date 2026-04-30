@@ -397,6 +397,16 @@ const EmotionViews = {
                         <h3>Histórico: Reconocimiento Automático</h3>
                         <div id="facialTimelineChart"></div>
                     </div>
+                    
+                    <div class="chart-card">
+                        <h3>Causas de Emociones Registradas</h3>
+                        <div id="causesBarChart"></div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>Energía vs Emociones</h3>
+                        <div id="energyEmotionScatterChart"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -415,7 +425,7 @@ const EmotionViews = {
         try {
             // Fetch Timeline Data
             const timelineRes = await fetch(`/api/reports/user/${userId}/timeline/`, { headers });
-            let timelineData = { facial_timeline: [], manual_timeline: [] };
+            let timelineData = { facial_timeline: [], manual_timeline: [], causes_distribution: {}, energy_vs_emotion: [] };
             if (timelineRes.ok) {
                 timelineData = await timelineRes.json();
             }
@@ -423,6 +433,8 @@ const EmotionViews = {
             // Render Timeline Charts
             this.renderTimeline(timelineData.manual_timeline, "#manualTimelineChart", "Registro Manual", "#6ECED2");
             this.renderTimeline(timelineData.facial_timeline, "#facialTimelineChart", "Reconocimiento Facial", "#f87171");
+            this.renderCausesChart(timelineData.causes_distribution, "#causesBarChart");
+            this.renderEnergyEmotionChart(timelineData.energy_vs_emotion, "#energyEmotionScatterChart");
 
         } catch (err) {
             this._logError('Error fetching chart data', err);
@@ -475,6 +487,76 @@ const EmotionViews = {
                 y: {
                     formatter: (val) => visualNames[Math.round(val)]
                 }
+            }
+        };
+
+        const { ApexCharts } = window;
+        new ApexCharts(container, options).render();
+    },
+
+    renderCausesChart(data, selector) {
+        const container = document.querySelector(selector);
+        if (!container) return;
+
+        if (!data || Object.keys(data).length === 0) {
+            container.innerHTML = `<div style="height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">No hay datos disponibles para esta fuente.</div>`;
+            return;
+        }
+
+        const categories = Object.keys(data);
+        const values = Object.values(data);
+
+        const options = {
+            series: [{ name: 'Registros', data: values }],
+            chart: { type: 'bar', height: 300, toolbar: { show: false }, foreColor: '#94a3b8' },
+            colors: ['#a855f7'],
+            plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+            dataLabels: { enabled: true, style: { fontSize: '12px' } },
+            xaxis: { categories: categories, labels: { style: { colors: '#94a3b8' } } },
+            yaxis: { labels: { style: { colors: '#94a3b8' } } },
+            tooltip: { theme: 'dark' }
+        };
+
+        const { ApexCharts } = window;
+        new ApexCharts(container, options).render();
+    },
+
+    renderEnergyEmotionChart(data, selector) {
+        const container = document.querySelector(selector);
+        if (!container) return;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = `<div style="height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted);">No hay datos disponibles para esta fuente.</div>`;
+            return;
+        }
+
+        const { dbId: dbIdMap, visual: visualMap, names: visualNames } = this._timelineMaps;
+        
+        const seriesData = data.map(item => {
+            const dbId = dbIdMap[item.emotion.toLowerCase()] || 0;
+            return [item.energy, visualMap[dbId] || 0];
+        });
+
+        const options = {
+            series: [{ name: 'Energía vs Emoción', data: seriesData }],
+            chart: { type: 'scatter', height: 300, toolbar: { show: false }, foreColor: '#94a3b8', zoom: { enabled: false } },
+            colors: ['#fbbf24'],
+            markers: { size: 6, hover: { size: 9 } },
+            xaxis: { 
+                title: { text: 'Nivel de Energía', style: { color: '#94a3b8' } },
+                min: 0, max: 6, tickAmount: 6, labels: { formatter: val => Math.round(val), style: { colors: '#94a3b8' } }
+            },
+            yaxis: {
+                title: { text: 'Emoción', style: { color: '#94a3b8' } },
+                min: 1, max: 7, tickAmount: 6,
+                labels: {
+                    formatter: (val) => visualNames[Math.round(val)] || val,
+                    style: { colors: '#94a3b8' }
+                }
+            },
+            tooltip: {
+                theme: 'dark',
+                y: { formatter: val => visualNames[Math.round(val)] || val }
             }
         };
 
