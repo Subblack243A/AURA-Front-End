@@ -80,6 +80,14 @@ const AdminReports = {
                         <h3 style="margin-bottom: 1.5rem; color: var(--error);">Reconocimiento Facial (Emoción Dominante)</h3>
                         <div id="adminFacialBarChart" style="width: 100%;"></div>
                     </div>
+                    <div class="card chart-card" style="max-width: none; margin: 0;">
+                        <h3 style="margin-bottom: 1.5rem; color: #a855f7;">Causas de Emociones Registradas</h3>
+                        <div id="adminCausesBarChart" style="width: 100%;"></div>
+                    </div>
+                    <div class="card chart-card" style="max-width: none; margin: 0;">
+                        <h3 style="margin-bottom: 1.5rem; color: #fbbf24;">Energía vs Emociones</h3>
+                        <div id="adminEnergyScatterChart" style="width: 100%;"></div>
+                    </div>
                     <div class="card chart-card" style="max-width: none; margin: 0; grid-column: 1 / -1; width: 100%;">
                         <h3 style="margin-bottom: 1.5rem; color: #fff; text-align: center;">Índices de Agotamiento (MBI-SS)</h3>
                         <div id="adminBurnoutDonutChart" style="display: flex; justify-content: center; width: 100%;"></div>
@@ -140,6 +148,13 @@ const AdminReports = {
             this.renderBarChart(data.manual_registrations, '#adminManualBarChart', 'Registros Manuales', '#6ECED2');
             this.renderBarChart(data.facial_recognition_dominance, '#adminFacialBarChart', 'Dominancia Facial', '#f87171');
             
+            if (data.causes_distribution) {
+                this.renderHorizontalBarChart(data.causes_distribution, '#adminCausesBarChart', 'Registros por Causa', '#a855f7');
+            }
+            if (data.energy_vs_emotion) {
+                this.renderScatterChart(data.energy_vs_emotion, '#adminEnergyScatterChart');
+            }
+
             if (data.burnout_survey_results) {
                 this.renderDonutChart(data.burnout_survey_results, '#adminBurnoutDonutChart');
             }
@@ -255,6 +270,34 @@ const AdminReports = {
                             </table>
                         </div>
 
+                        <!-- Causes Table -->
+                        <div class="card" style="padding: 2rem;">
+                            <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: #a855f7;">Resumen: Causas de Emociones</h2>
+                            <table id="table-causes-stats" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 0.75rem; color: var(--primary);">Causa</th>
+                                        <th style="padding: 0.75rem; color: var(--primary); text-align: right;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Energy Table -->
+                        <div class="card" style="padding: 2rem;">
+                            <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: #fbbf24;">Resumen: Niveles de Energía</h2>
+                            <table id="table-energy-stats" style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid rgba(255,255,255,0.1); text-align: left;">
+                                        <th style="padding: 0.75rem; color: var(--primary);">Nivel de Energía</th>
+                                        <th style="padding: 0.75rem; color: var(--primary); text-align: right;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
                         <!-- Survey Stats Table -->
                         <div class="card" style="padding: 2rem;">
                             <h2 style="margin-bottom: 1.5rem; font-size: 1.1rem; color: #a78bfa;">Resumen: Encuestas MBI-SS</h2>
@@ -307,6 +350,13 @@ const AdminReports = {
             this.fillTable('table-manual-emotions', data.manual_emotions);
             this.fillTable('table-facial-emotions', data.facial_emotions);
             this.fillTable('table-survey-stats', data.survey_results);
+            
+            if (data.causes_distribution) {
+                this.fillTable('table-causes-stats', data.causes_distribution);
+            }
+            if (data.energy_distribution) {
+                this.fillTable('table-energy-stats', data.energy_distribution);
+            }
 
         } catch (err) {
             console.error(err);
@@ -398,6 +448,8 @@ const AdminReports = {
         // 3. New Detailed Tables
         addSection("Resumen de Registros Manuales", '#table-manual-emotions', [251, 191, 36]);
         addSection("Resumen de Reconocimientos Faciales", '#table-facial-emotions', [248, 113, 113]);
+        addSection("Resumen de Causas de Emociones", '#table-causes-stats', [168, 85, 247]);
+        addSection("Resumen de Niveles de Energía", '#table-energy-stats', [251, 191, 36]);
         addSection("Resumen de Encuestas MBI-SS", '#table-survey-stats', [167, 139, 250]);
 
         const pad = (n) => n.toString().padStart(2, '0');
@@ -454,6 +506,89 @@ const AdminReports = {
         if (container) {
             new ApexCharts(container, options).render();
         }
+    },
+
+    renderHorizontalBarChart(dataObj, selector, name, color) {
+        const container = document.querySelector(selector);
+        if (!container) return;
+        
+        if (!dataObj || Object.keys(dataObj).length === 0) {
+            container.innerHTML = `<div style="height: 400px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">No hay datos disponibles.</div>`;
+            return;
+        }
+
+        const categories = Object.keys(dataObj);
+        const values = Object.values(dataObj);
+
+        const options = {
+            series: [{ name: name, data: values }],
+            chart: { type: 'bar', height: 400, background: 'transparent', toolbar: { show: false }, foreColor: '#94a3b8' },
+            colors: [color],
+            plotOptions: { bar: { borderRadius: 4, horizontal: true, dataLabels: { position: 'center' } } },
+            dataLabels: { enabled: true, style: { fontSize: '12px' } },
+            xaxis: { categories: categories, labels: { style: { colors: '#94a3b8' } } },
+            yaxis: { labels: { style: { colors: '#94a3b8' } } },
+            theme: { mode: 'dark' },
+            grid: { borderColor: 'rgba(255,255,255,0.05)' },
+            tooltip: { theme: 'dark' }
+        };
+
+        const { ApexCharts } = window;
+        new ApexCharts(container, options).render();
+    },
+
+    renderScatterChart(dataArr, selector) {
+        const container = document.querySelector(selector);
+        if (!container) return;
+
+        if (!dataArr || dataArr.length === 0) {
+            container.innerHTML = `<div style="height: 400px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.4);">No hay datos disponibles.</div>`;
+            return;
+        }
+
+        const emotionMap = { 
+            'feliz': 5, 'felicidad': 5, 'happiness': 5,
+            'neutral': 4, 
+            'sorpresa': 3, 'surprise': 3,
+            'triste': 2, 'tristeza': 2, 'sadness': 2,
+            'miedo': 1, 'fear': 1,
+            'enojado': 0, 'enojo': 0, 'ira': 0, 'anger': 0,
+            'disgusto': 0, 'disgust': 0
+        };
+        const reverseMap = ['Enojado', 'Miedo', 'Triste', 'Sorpresa', 'Neutral', 'Feliz'];
+
+        const seriesData = dataArr.map(item => {
+            const yVal = emotionMap[item.emotion.toLowerCase()] ?? 0;
+            return [item.energy, yVal];
+        });
+
+        const options = {
+            series: [{ name: 'Energía vs Emoción', data: seriesData }],
+            chart: { type: 'scatter', height: 400, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
+            colors: ['#fbbf24'],
+            theme: { mode: 'dark' },
+            markers: { size: 6, hover: { size: 9 } },
+            xaxis: { 
+                title: { text: 'Nivel de Energía', style: { color: '#94a3b8', fontSize: '12px', fontWeight: 600 } },
+                min: 0, max: 6, tickAmount: 6, labels: { formatter: val => Math.round(val), style: { fontSize: '12px', colors: '#94a3b8' } }
+            },
+            yaxis: {
+                title: { text: 'Emoción', style: { color: '#94a3b8', fontSize: '12px', fontWeight: 600 } },
+                min: 0, max: 5, tickAmount: 5,
+                labels: {
+                    formatter: (val) => reverseMap[Math.round(val)] || '',
+                    style: { fontSize: '12px', colors: ['#94a3b8'], fontWeight: 600 }
+                }
+            },
+            grid: { borderColor: 'rgba(255,255,255,0.05)' },
+            tooltip: {
+                theme: 'dark',
+                y: { formatter: val => reverseMap[Math.round(val)] || val }
+            }
+        };
+
+        const { ApexCharts } = window;
+        new ApexCharts(container, options).render();
     },
 
     renderDonutChart(dataObj, selector) {
