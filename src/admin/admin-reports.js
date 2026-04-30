@@ -557,34 +557,57 @@ const AdminReports = {
         };
         const reverseMap = ['Enojado', 'Miedo', 'Triste', 'Sorpresa', 'Neutral', 'Feliz'];
 
-        const seriesData = dataArr.map(item => {
-            const yVal = emotionMap[item.emotion.toLowerCase()] ?? 0;
-            return [item.energy, yVal];
+        const heatData = {};
+        reverseMap.forEach(em => {
+            heatData[em] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+        });
+
+        dataArr.forEach(item => {
+            const eng = String(Math.round(item.energy));
+            const yIdx = emotionMap[item.emotion.toLowerCase()] ?? 0;
+            const emName = reverseMap[yIdx];
+            if (heatData[emName] && heatData[emName][eng] !== undefined) {
+                heatData[emName][eng]++;
+            }
+        });
+
+        const seriesData = reverseMap.map(em => {
+            return {
+                name: em,
+                data: ['1', '2', '3', '4', '5'].map(eng => ({
+                    x: eng,
+                    y: heatData[em][eng]
+                }))
+            };
         });
 
         const options = {
-            series: [{ name: 'Energía vs Emoción', data: seriesData }],
-            chart: { type: 'scatter', height: 400, background: 'transparent', toolbar: { show: false }, zoom: { enabled: false } },
+            series: seriesData,
+            chart: { type: 'heatmap', height: 400, background: 'transparent', toolbar: { show: false } },
             colors: ['#fbbf24'],
             theme: { mode: 'dark' },
-            markers: { size: 6, hover: { size: 9 } },
-            xaxis: { 
-                title: { text: 'Nivel de Energía', style: { color: '#94a3b8', fontSize: '12px', fontWeight: 600 } },
-                min: 0, max: 6, tickAmount: 6, labels: { formatter: val => Math.round(val), style: { fontSize: '12px', colors: '#94a3b8' } }
-            },
-            yaxis: {
-                title: { text: 'Emoción', style: { color: '#94a3b8', fontSize: '12px', fontWeight: 600 } },
-                min: 0, max: 5, tickAmount: 5,
-                labels: {
-                    formatter: (val) => reverseMap[Math.round(val)] || '',
-                    style: { fontSize: '12px', colors: ['#94a3b8'], fontWeight: 600 }
+            dataLabels: { enabled: true, style: { colors: ['#fff'] } },
+            plotOptions: {
+                heatmap: {
+                    shadeIntensity: 0.5,
+                    radius: 4,
+                    useFillColorAsStroke: false,
+                    colorScale: {
+                        ranges: [
+                            { from: 0, to: 0, color: 'rgba(255,255,255,0.05)', name: '0' }
+                        ]
+                    }
                 }
             },
-            grid: { borderColor: 'rgba(255,255,255,0.05)' },
-            tooltip: {
-                theme: 'dark',
-                y: { formatter: val => reverseMap[Math.round(val)] || val }
-            }
+            xaxis: { 
+                title: { text: 'Nivel de Energía', style: { color: '#94a3b8', fontSize: '12px', fontWeight: 600 }, offsetY: 10 },
+                labels: { style: { colors: '#94a3b8' } }
+            },
+            yaxis: {
+                labels: { style: { colors: '#94a3b8', fontWeight: 600 } }
+            },
+            grid: { padding: { right: 20 }, borderColor: 'rgba(255,255,255,0.05)' },
+            tooltip: { theme: 'dark' }
         };
 
         const { ApexCharts } = window;
