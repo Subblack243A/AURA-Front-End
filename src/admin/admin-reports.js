@@ -172,10 +172,20 @@ const AdminReports = {
                         Resumen General Académico
                     </h1>
                     <p class="subtitle">Consolidado de métricas y estadísticas de la plataforma.</p>
-                    <button id="btn-download-pdf" class="primary-btn" style="width: auto; margin: 1.5rem auto; padding: 0.75rem 2rem; display: flex; gap: 10px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                        Descargar Reporte en PDF
-                    </button>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 1.5rem auto;">
+                        <button id="btn-download-pdf" class="primary-btn" style="width: auto; padding: 0.75rem 2rem; display: flex; gap: 10px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Descargar Reporte en PDF
+                        </button>
+                        <button id="btn-download-dataset-profile" class="secondary-btn" style="width: auto; padding: 0.75rem 2rem; display: flex; gap: 10px; background: rgba(110, 206, 210, 0.1); border: 1px solid var(--primary); color: var(--primary);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Descargar Dataset: Perfil
+                        </button>
+                        <button id="btn-download-dataset-analysis" class="secondary-btn" style="width: auto; padding: 0.75rem 2rem; display: flex; gap: 10px; background: rgba(168, 85, 247, 0.1); border: 1px solid #a855f7; color: #a855f7;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                            Descargar Dataset: Análisis Emocional
+                        </button>
+                    </div>
                 </div>
 
                 <div class="summary-totals" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
@@ -322,6 +332,8 @@ const AdminReports = {
 
         document.getElementById('back-to-reports-landing').addEventListener('click', () => this.renderLanding(appContainer, app));
         document.getElementById('btn-download-pdf').addEventListener('click', () => this.downloadPDF());
+        document.getElementById('btn-download-dataset-profile').addEventListener('click', () => this.downloadDataset('/api/reports/dataset/profile/', 'dataset_perfiles', 'btn-download-dataset-profile'));
+        document.getElementById('btn-download-dataset-analysis').addEventListener('click', () => this.downloadDataset('/api/reports/dataset/analysis/', 'dataset_analisis_emocional', 'btn-download-dataset-analysis'));
 
         await this.loadGeneralReport();
     },
@@ -455,6 +467,58 @@ const AdminReports = {
         const pad = (n) => n.toString().padStart(2, '0');
         const fileDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
         doc.save(`reporte_general_plataforma_${fileDateStr}.pdf`);
+    },
+
+    async downloadDataset(url, baseFilename, buttonId) {
+        if (this.isDownloadingDataset) return;
+        this.isDownloadingDataset = true;
+
+        const button = document.getElementById(buttonId);
+        const originalHTML = button.innerHTML;
+        const originalOpacity = button.style.opacity;
+        const originalCursor = button.style.cursor;
+
+        // Add CSS for spinner if not exists
+        if (!document.getElementById('spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'spinner-style';
+            style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+            document.head.appendChild(style);
+        }
+
+        button.innerHTML = `<span style="width: 18px; height: 18px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin 1s linear infinite; display: inline-block;"></span> Generando...`;
+        button.style.opacity = "0.7";
+        button.style.cursor = "not-allowed";
+
+        const token = window.Auth.getToken();
+        try {
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Token ${token}` }
+            });
+            if (!response.ok) throw new Error('Error al descargar dataset');
+            
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, '0');
+            const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+            
+            const blob = await response.blob();
+            const urlBlob = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = urlBlob;
+            a.download = `${baseFilename}_${dateStr}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(urlBlob);
+        } catch (err) {
+            console.error('Error:', err);
+            alert('Ocurrió un error al intentar descargar el dataset.');
+        } finally {
+            this.isDownloadingDataset = false;
+            button.innerHTML = originalHTML;
+            button.style.opacity = originalOpacity;
+            button.style.cursor = originalCursor;
+        }
     },
 
     renderBarChart(dataObj, selector, name, color) {
